@@ -29,11 +29,13 @@
     .status-bar { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; background:var(--card); border:1px solid var(--border); padding:12px 16px; border-radius:14px; font-size:.9em; }
     .badge { padding:4px 10px; border-radius:999px; font-size:.8em; font-weight:700; background:rgba(56,189,248,0.16); color:var(--accent); }
     .badge.live { background:rgba(34,197,94,0.18); color:var(--accent-2); }
+    .badge.off { background:rgba(239,68,68,0.18); color:var(--danger); }
+    .badge.hand { background:rgba(245,158,11,0.2); color:var(--gold); }
     .grid-2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(310px,1fr)); gap:18px; }
     .grid-3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:16px; }
     .grid-4 { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
     .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
-    .stat-box, .admin-subject-box, .top-student-card, .stage-banner, .profile-box { background:var(--card-2); border:1px solid var(--border); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px; }
+    .stat-box, .admin-subject-box, .top-student-card, .stage-banner, .profile-box, .stage-link-box { background:var(--card-2); border:1px solid var(--border); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px; }
     .stat-num { font-size:1.35em; font-weight:800; color:var(--accent); }
     .card, .subject-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:12px; }
     .super-card { border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border)); box-shadow:0 12px 30px rgba(0,0,0,0.18); }
@@ -52,6 +54,12 @@
     .link-pill { display:inline-flex; align-items:center; gap:6px; text-decoration:none; padding:7px 12px; border-radius:10px; font-size:.85em; font-weight:700; background:var(--card-2); color:var(--text); border:1px solid var(--border); }
     .link-pill.pdf { border-color:rgba(56,189,248,0.45); color:var(--accent); }
     .link-pill.img { border-color:rgba(34,197,94,0.45); color:var(--accent-2); }
+    .link-pill.audio { border-color:rgba(245,158,11,0.5); color:var(--gold); }
+    .lec-list { display:flex; flex-direction:column; gap:8px; margin-top:4px; }
+    .lec-box { background:var(--card-2); border:1px solid var(--border); border-right:4px solid var(--accent); border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:5px; }
+    .room-live-stage { background:var(--card-2); border:1px solid var(--border); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+    .meter-wrap { height:10px; background:var(--card); border-radius:999px; overflow:hidden; border:1px solid var(--border); }
+    .meter-bar { height:100%; width:0%; background:var(--accent-2); transition:width .1s; }
     .gpa-result { background:var(--card-2); border:1px solid var(--border); border-radius:12px; padding:12px; font-weight:700; }
     .hidden { display:none !important; }
   </style>
@@ -87,39 +95,85 @@
 
     <div class="nav-tabs">
       <button class="tab-btn active" data-tab="subjectsTab" id="tabSubjectsBtn">بەش و قۆناغ (١٢ مادە)</button>
-      <button class="tab-btn" data-tab="toolsTab" id="tabToolsBtn">ئامرازێن کۆلیژێ (College Tools)</button>
+      <button class="tab-btn" data-tab="roomTab" id="tabRoomBtn">هۆلا موحازەرێ (🎙️ Live Room)</button>
+      <button class="tab-btn" data-tab="toolsTab" id="tabToolsBtn">ئامرازێن کۆلیژێ</button>
       <button class="tab-btn" data-tab="profileTab" id="tabProfileBtn">My Profile (👤)</button>
-      <button class="tab-btn" data-tab="settingsTab" id="tabSettingsBtn">ڕێکخستنان (⚙️ Settings)</button>
+      <button class="tab-btn" data-tab="settingsTab" id="tabSettingsBtn">ڕێکخستنان (⚙️)</button>
     </div>
 
     <section id="adminPanel" class="card super-card hidden">
       <div class="row" style="justify-content:space-between;">
         <div>
-          <h2 id="adminPanelTitle">پانێلا تایبەتا ڕێڤەبرنێ (Super Admin & Dept Admin)</h2>
-          <p class="muted" id="adminPanelDesc">کۆنترۆڵا تەماما ١٢ مادەیێن قۆناغا هەلبژارتی، ٢ کۆرسان، ٣ یەکەمێن قۆناغێ، و ئاگادارییان.</p>
+          <h2 id="adminPanelTitle">پانێلا تایبەتا ڕێڤەبرنێ</h2>
+          <p class="muted" id="adminPanelDesc">کۆنترۆڵا لینکێن هەر ٤ قۆناغان (ON/OFF)، ١٢ مادەیان، موحازەران، ٣ سەرکەفتییێن هەر کۆرسەکێ، نینەرێ هەر قۆناغەکێ، و قوتابیێن Join کری.</p>
         </div>
         <span class="badge" id="adminRoleBadge">Admin Unlocked</span>
       </div>
 
       <div class="stats-grid">
         <div class="stat-box"><span class="muted" id="statSubLabel">مادەیێن ڤێ قۆناغێ</span><span class="stat-num" id="statActiveSubjects">0 / 12</span></div>
+        <div class="stat-box"><span class="muted" id="statJoinedLabel">قوتابیێن Join کری</span><span class="stat-num" id="statJoinedCount">0</span></div>
         <div class="stat-box"><span class="muted" id="statAnnLabel">ئاگاداریێن بڵاڤکری</span><span class="stat-num" id="statAnnCount">0</span></div>
-        <div class="stat-box"><span class="muted" id="statDeptLabel">بەش و تێبینی</span><span class="stat-num" id="statDeptCount">0</span></div>
-        <div class="stat-box"><span class="muted" id="statHonorLabel">یەکەمێن تۆمارکری</span><span class="stat-num" id="statHonorCount">0 / 3</span></div>
+        <div class="stat-box"><span class="muted" id="statHonorLabel">سەرکەفتییێن تۆمارکری</span><span class="stat-num" id="statHonorCount">0 / 3</span></div>
       </div>
 
+      <!-- کۆنترۆڵا لینکێن هەر ٤ قۆناغان ب دەستێ Super Admin (ON / OFF) -->
+      <div id="superStageLinksBox" class="card hidden" style="background:var(--card-2);">
+        <h3 id="superStageLinksTitle">🔗 کۆنترۆڵا لینکێن هەر ٤ قۆناغان بۆ هۆلا زیندی (Super Admin ON / OFF)</h3>
+        <p class="muted" id="superStageLinksDesc">بۆ هەر قۆناغەکێ لینکەکێ تایبەت چێ بکە و ب ON یان OFF چالاک/راوەستێنە دا مامۆستا و قوتابی بکاربینن.</p>
+        <div id="superStageLinksGrid" class="grid-2"></div>
+        <div class="row"><button id="saveStageLinksBtn" class="primary">تۆمارکرنا لینک و دۆخێ (ON/OFF) هەر ٤ قۆناغان</button></div>
+      </div>
+
+      <!-- نینەرێ قۆناغێ + ٣ سەرکەفتییێن هەر کۆرسەکێ -->
       <div class="card" style="background:var(--card-2);">
-        <h3 id="honorAdminTitle">پشتگیرییا قوتابیێن زیرەک (٣ یەکەمێن قۆناغێ)</h3>
-        <p class="muted" id="honorAdminDesc">ناڤێ ٣ قوتابیێن یەکەم، تێکڕا، و پەیاما پشتگیریێ بنڤیسە:</p>
+        <h3 id="honorAdminTitle">🏆 نینەرێ قۆناغێ و ٣ سەرکەفتییێن هەر کۆرسەکێ (١، ٢، ٣)</h3>
+        <div class="grid-2">
+          <div>
+            <label class="muted" id="repInputLabel" style="display:block;margin-bottom:4px;">ناڤێ نینەرێ ڤێ قۆناغێ:</label>
+            <input type="text" id="stageRepInput" placeholder="ناڤێ نینەرێ قۆناغێ..." style="width:100%;" />
+          </div>
+          <div>
+            <label class="muted" id="honorCourseLabel" style="display:block;margin-bottom:4px;">کۆرسی هەلبژێرە بۆ ٣ سەرکەفتییان:</label>
+            <select id="honorCourseSelect" style="width:100%;">
+              <option value="c1">کۆرسێ ١ (نیڤا ساڵێ)</option>
+              <option value="c2">کۆرسێ ٢ (سەرێ ساڵێ)</option>
+            </select>
+          </div>
+        </div>
         <div id="adminHonorGrid" class="grid-3"></div>
-        <div class="row"><button id="saveHonorBtn" class="gold">تۆمارکرنا ٣ یەکەمێن قۆناغێ</button></div>
+        <div class="row"><button id="saveHonorBtn" class="gold">تۆمارکرنا نینەری و ٣ سەرکەفتییان</button></div>
       </div>
 
-      <h3 id="twelveSubjectsAdminTitle">رێکخستنا ١٢ مادەیێن قۆناغا هەلبژارتی (PDF & وێنە / تەسویر)</h3>
+      <!-- زێدەکرنا موحازەرێ -->
+      <div class="card" style="background:var(--card-2);">
+        <h3 id="addLecTitle">🎙️ زێدەکرنا موحازەرێ بۆ مادەیێ (شەرح، دەنگ، ڕەنگ، مامۆستا)</h3>
+        <div class="grid-2">
+          <select id="lecSubjectSelect"></select>
+          <input type="text" id="lecTitleInput" placeholder="ناڤێ موحازەرێ" />
+          <input type="text" id="lecTeacherInput" placeholder="ناڤێ مامۆستای" />
+          <select id="lecColorSelect">
+            <option value="#38bdf8">ڕەنگێ شین (Blue)</option>
+            <option value="#22c55e">ڕەنگێ کەسک (Green)</option>
+            <option value="#f59e0b">ڕەنگێ زێڕین (Gold)</option>
+            <option value="#a855f7">ڕەنگێ مۆر (Purple)</option>
+            <option value="#ef4444">ڕەنگێ سۆر (Red)</option>
+          </select>
+        </div>
+        <input type="url" id="lecAudioInput" placeholder="لینکێ دەنگی / ئۆدیۆ (Audio Link)" />
+        <textarea id="lecExplainInput" rows="2" placeholder="شەرحکرنا موحازەرێ و تێبینییێن سەرەکی..."></textarea>
+        <div class="row"><button id="saveLecBtn" class="success">زێدەکرنا موحازەرێ</button></div>
+      </div>
+
+      <!-- قوتابیێن Join کری -->
+      <div class="card" style="background:var(--card-2);">
+        <h3 id="joinedStudentsAdminTitle">👥 قوتابیێن کو Join کرییە</h3>
+        <div id="joinedStudentsList" class="muted">...</div>
+      </div>
+
+      <h3 id="twelveSubjectsAdminTitle">رێکخستنا ١٢ مادەیێن قۆناغا هەلبژارتی (PDF & وێنە)</h3>
       <div id="adminSubjectsGrid" class="grid-3"></div>
       <div class="row"><button id="saveAllSubjectsBtn" class="success">تۆمارکرنا هەمی ١٢ مادەیان</button></div>
-
-      <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;" />
 
       <div class="grid-2">
         <div class="card" style="background:var(--card-2);">
@@ -160,12 +214,20 @@
 
       <div class="card" style="margin-bottom:18px;">
         <div class="stage-banner">
-          <h2 id="activeStageHeading">Statistics — قۆناغا ١</h2>
+          <div class="row" style="justify-content:space-between;">
+            <h2 id="activeStageHeading">Statistics — قۆناغا ١</h2>
+            <div class="row">
+              <span class="badge" id="stageRepBadge">نینەرێ قۆناغێ: —</span>
+              <span class="badge off" id="stageRoomStatusBadge">Link: OFF</span>
+            </div>
+          </div>
           <p class="muted" id="activeStageSubjectsList"></p>
           <div class="row">
             <button class="course-btn active" data-course="all" id="courseAllBtn">هەمی مادە (١٢)</button>
             <button class="course-btn" data-course="c1" id="course1Btn">کۆرسێ ١ (نیڤا ساڵێ)</button>
             <button class="course-btn" data-course="c2" id="course2Btn">کۆرسێ ٢ (سەرێ ساڵێ)</button>
+            <button class="success" id="goStageLiveBtn" onclick="openStageLiveTab()">🎙️ Join Live Room</button>
+            <button class="ghost" id="copyStageLinkBtn" onclick="copyCurrentStageLink()">📋 Copy Stage Link</button>
           </div>
           <input type="search" id="subjectSearchInput" placeholder="گەڕان د ناڤ مادەیان دا..." />
         </div>
@@ -173,8 +235,13 @@
       </div>
 
       <div class="card" style="margin-bottom:18px;">
-        <h2 id="honorPublicTitle">🌟 ٣ یەکەمێن قۆناغێ و پشتگیرییا قوتابیێن زیرەک</h2>
-        <p class="muted" id="honorPublicSub">پێزانین و هاندان بۆ قوتابیێن زیرەک و بەردەوام د خواندنێ دا.</p>
+        <div class="row" style="justify-content:space-between;">
+          <div>
+            <h2 id="honorPublicTitle">🌟 ٣ سەرکەفتییێن قۆناغێ (١، ٢، ٣)</h2>
+            <p class="muted" id="honorPublicSub">سەرکەفتییێن یەکەم، دویەم، و سێیەم بۆ هەر کۆرسەکێ.</p>
+          </div>
+          <span class="badge" id="honorCourseBadge">کۆرسێ ١ (نیڤا ساڵێ)</span>
+        </div>
         <div id="honorDisplayGrid" class="grid-3"></div>
       </div>
 
@@ -182,6 +249,53 @@
         <div class="card"><h3 id="deptListTitle">بەش و زانیاریێن تۆمارکری</h3><div id="deptList" class="muted">...</div></div>
         <div class="card"><h3 id="annListTitle">ئاگاداریێن کۆلێژێ</h3><div id="annList" class="muted">...</div></div>
       </section>
+    </div>
+
+    <!-- بەشێ هۆلا موحازەرێ یا زیندی (ب لینکێ هەر قۆناغەکێ + ON/OFF ژ لایێ Super Admin + Live Mic WebRTC + Raise Hand) -->
+    <div id="roomTab" class="tab-content hidden">
+      <div class="grid-2" style="margin-bottom:18px;">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;">
+            <h3 id="createRoomTitle">🎙️ هۆلا زیندی یا قۆناغێ (مامۆستا)</h3>
+            <span class="badge off" id="roomGateBadge">OFF</span>
+          </div>
+          <p class="muted" id="createRoomDesc">مامۆستا مادەیێ خۆ هەلبژێریت، ڕەنگ و دەنگ دیار بکەت، و ب مایکێ زیندی شەرح بکەت کاتێ لینکێ قۆناغێ ON بیت.</p>
+          <div id="roomClosedNotice" class="gpa-result muted">لینکێ هۆلا زیندی یێ ڤێ قۆناغێ نووکە (OFF) یە. سوپەر ئەدمین دشێت لینکێ ڤێ قۆناغێ ON بکەت.</div>
+          <select id="roomSubjectSelect"></select>
+          <input type="text" id="roomTeacherInput" placeholder="ناڤێ مامۆستای" />
+          <input type="text" id="roomTopicInput" placeholder="سەردێڕێ موحازەرێ" />
+          <div class="grid-2">
+            <select id="roomColorSelect">
+              <option value="#38bdf8">ڕەنگێ شین (Blue)</option>
+              <option value="#22c55e">ڕەنگێ کەسک (Green)</option>
+              <option value="#f59e0b">ڕەنگێ زێڕین (Gold)</option>
+              <option value="#a855f7">ڕەنگێ مۆر (Purple)</option>
+              <option value="#ef4444">ڕەنگێ سۆر (Red)</option>
+            </select>
+            <input type="url" id="roomAudioUrlInput" placeholder="لینکێ دەنگی (Audio Stream / MP3)" />
+          </div>
+          <textarea id="roomNotesInput" rows="2" placeholder="شەرحکرن یان خالێن گرنگ یێن موحازەرێ..."></textarea>
+          <div class="row">
+            <button id="createRoomBtn" class="success">ڤەکرنا / نویکرنا هۆلێ</button>
+            <button id="startBroadcastBtn" class="gold">📡 دەستپێکرنا مایکێ زیندی (Go Live Audio)</button>
+            <button id="stopBroadcastBtn" class="danger hidden">⏹️ راوەستاندنا مایکێ</button>
+          </div>
+          <div class="meter-wrap"><div id="micLevelBar" class="meter-bar"></div></div>
+          <audio id="teacherLiveAudioPlayer" controls autoplay style="width:100%;"></audio>
+        </div>
+
+        <div class="card">
+          <h3 id="activeRoomStageTitle">🎧 هۆلا زیندی و گوهـگرتن + دەست بلندکرن (✋)</h3>
+          <div id="activeRoomBox" class="room-live-stage">
+            <span class="muted" id="noRoomSelectedMsg">هۆلەکێ هەلبژێرە یان ڤەکە دا دەنگ، ڕەنگ، شەرح، دەست بلندکرن، و قوتابیێن Join کری ببینی.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 id="roomsListTitle">🏛️ هۆلێن موحازەرا یێن ڤێ قۆناغێ</h3>
+        <div id="roomsGrid" class="grid-3"></div>
+      </div>
     </div>
 
     <div id="toolsTab" class="tab-content hidden">
@@ -196,7 +310,7 @@
 
         <div class="card">
           <h3 id="statsToolTitle">هەژمارکەرێ ب لەز یێ ئامارێ (Mean / Variance / SD)</h3>
-          <p class="muted" id="statsToolDesc">ژمارەیان ب کۆما یان بۆشایی بنڤیسە (نموونە: 12, 15, 18, 20):</p>
+          <p class="muted" id="statsToolDesc">ژمارەیان ب کۆما یان بۆشایی بنڤیسە:</p>
           <input type="text" id="statsNumbersInput" placeholder="10, 20, 30, 40" />
           <button id="calcStatsBtn" class="success">هەژمارتنا ئاماری</button>
           <div id="statsOutput" class="gpa-result muted">—</div>
@@ -359,26 +473,53 @@
       ]
     };
 
+    const emptyThree = () => [
+      { rank: 1, name: "", score: "", message: "" },
+      { rank: 2, name: "", score: "", message: "" },
+      { rank: 3, name: "", score: "", message: "" }
+    ];
+
     const i18n = {
       ku: {
         dir:"rtl", title:"MyCollege", student:"قوتابی (Student)", deptAdmin:"ئەدمینێ بەشێ (Department Admin)", superAdmin:"سوپەر ئەدمین (Super Admin)",
         pinPlaceholder:"کۆدێ PIN", unlock:"چوونە ژوور", logout:"دەرچوون", statusPrefix:"دۆخێ نووکە:",
-        tabSubjects:"بەش و قۆناغ (١٢ مادە)", tabTools:"ئامرازێن کۆلیژێ", tabProfile:"My Profile (👤)", tabSettings:"ڕێکخستنان (⚙️)",
-        adminTitle:"پانێلا تایبەتا ڕێڤەبرنێ", adminDesc:"کۆنترۆڵا تەماما ١٢ مادەیێن قۆناغا هەلبژارتی، ٢ کۆرسان، ٣ یەکەمێن قۆناغێ، و ئاگادارییان.",
-        statSubLabel:"مادەیێن ڤێ قۆناغێ", statAnnLabel:"ئاگاداریێن بڵاڤکری", statDeptLabel:"بەش و تێبینی", statHonorLabel:"یەکەمێن تۆمارکری",
+        tabSubjects:"بەش و قۆناغ (١٢ مادە)", tabRoom:"هۆلا موحازەرێ (🎙️ Live Room)", tabTools:"ئامرازێن کۆلیژێ", tabProfile:"My Profile (👤)", tabSettings:"ڕێکخستنان (⚙️)",
+        adminTitle:"پانێلا تایبەتا ڕێڤەبرنێ", adminDesc:"کۆنترۆڵا لینکێن هەر ٤ قۆناغان (ON/OFF)، ١٢ مادەیان، موحازەران، ٣ سەرکەفتییێن هەر کۆرسەکێ، نینەرێ هەر قۆناغەکێ، و قوتابیێن Join کری.",
+        statSubLabel:"مادەیێن ڤێ قۆناغێ", statJoinedLabel:"قوتابیێن Join کری", statAnnLabel:"ئاگاداریێن بڵاڤکری", statHonorLabel:"سەرکەفتییێن تۆمارکری",
+        superStageLinksTitle:"🔗 کۆنترۆڵا لینکێن هەر ٤ قۆناغان بۆ هۆلا زیندی (Super Admin ON / OFF)",
+        superStageLinksDesc:"بۆ هەر قۆناغەکێ لینکەکێ تایبەت چێ بکە و ب ON یان OFF چالاک/راوەستێنە دا مامۆستا و قوتابی بکاربینن.",
+        saveStageLinksBtn:"تۆمارکرنا لینک و دۆخێ (ON/OFF) هەر ٤ قۆناغان", stageLinksSaved:"لینک و دۆخێ هەر ٤ قۆناغان هاتنە تۆمارکرن!",
+        linkOn:"ON (چالاک)", linkOff:"OFF (راوەستیای)", joinLiveBtn:"🎙️ Join Live Room", copyLinkBtn:"📋 Copy Stage Link", linkCopied:"لینکێ قۆناغێ هاتە کۆپیکرن!",
+        roomClosedMsg:"لینکێ هۆلا زیندی یێ ڤێ قۆناغێ نووکە (OFF) یە. سوپەر ئەدمین دشێت لینکێ ڤێ قۆناغێ ON بکەت.",
+        startBroadcastBtn:"📡 دەستپێکرنا مایکێ زیندی (Go Live Audio)", stopBroadcastBtn:"⏹️ راوەستاندنا مایکێ",
+        micNotAllowed:"دەستوورییا مایکی نەهاتە دان.", raiseHandBtn:"✋ دەست بلند بکە (Raise Hand)", lowerHandBtn:"👇 دەستی بینە خوارێ",
+        raisedHandsLabel:"قوتابیێن دەست بلندکری (✋):", noRaisedHands:"هیشتا کەسی دەست بلند نەکرییە.",
+        repInputLabel:"ناڤێ نینەرێ ڤێ قۆناغێ:", repInputPh:"ناڤێ نینەرێ قۆناغێ...", repBadgePrefix:"نینەرێ قۆناغێ:", repEmpty:"—",
+        honorCourseLabel:"کۆرسی هەلبژێرە بۆ ٣ سەرکەفتییان:",
+        addLecTitle:"🎙️ زێدەکرنا موحازەرێ بۆ مادەیێ (شەرح، دەنگ، ڕەنگ، مامۆستا)",
+        lecTitlePh:"ناڤێ موحازەرێ", lecTeacherPh:"ناڤێ مامۆستای", lecAudioPh:"لینکێ دەنگی / ئۆدیۆ (Audio URL)",
+        lecExplainPh:"شەرحکرنا موحازەرێ...", saveLecBtn:"زێدەکرنا موحازەرێ", teacherLabel:"مامۆستا:",
+        audioBtn:"🎧 دەنگ / موحازەرە", lecSaved:"موحازەرە هاتە زێدەکرن!", joinedStudentsAdminTitle:"👥 قوتابیێن کو Join کرییە",
+        createRoomTitle:"🎙️ هۆلا زیندی یا قۆناغێ (مامۆستا)", createRoomDesc:"مامۆستا مادەیێ خۆ هەلبژێریت، ڕەنگ و دەنگ دیار بکەت، و ب مایکێ زیندی شەرح بکەت کاتێ لینکێ قۆناغێ ON بیت.",
+        roomTeacherPh:"ناڤێ مامۆستای", roomTopicPh:"سەردێڕێ موحازەرێ", roomAudioUrlPh:"لینکێ دەنگی (Audio Stream / MP3)",
+        roomNotesPh:"شەرحکرن یان خالێن گرنگ یێن موحازەرێ...", createRoomBtn:"ڤەکرنا / نویکرنا هۆلێ",
+        activeRoomStageTitle:"🎧 هۆلا زیندی و گوهـگرتن + دەست بلندکرن (✋)", noRoomSelectedMsg:"هۆلەکێ هەلبژێرە یان ڤەکە دا دەنگ، ڕەنگ، شەرح، دەست بلندکرن، و قوتابیێن Join کری ببینی.",
+        roomsListTitle:"🏛️ هۆلێن موحازەرا یێن ڤێ قۆناغێ", joinRoomBtn:"Join Room (بەشداربوون)", leaveRoomBtn:"Leave Room (دەرچوون)",
+        listenersLabel:"قوتابیێن Join کری د هۆلێ دا:", noListeners:"هیشتا کەس Join نەبوویە.",
+        askPlaceholder:"پسیار یان تێبینییەکێ بۆ مامۆستای بنڤیسە...", sendAskBtn:"فرێکرن", roomCreated:"هۆلا موحازەرێ هاتە ڤەکرن!",
         selectDeptTitle:"بەشێن کۆلیژێ", statDeptName:"Statistics (ئامار)", statDeptDesc:"٤ قۆناغ • ٢ کۆرس • ١٢ مادە بۆ هەر قۆناغەکێ",
         selectStageTitle:"قۆناغێ هەلبژێرە", stageNames:{ 1:"قۆناغا ١", 2:"قۆناغا ٢", 3:"قۆناغا ٣", 4:"قۆناغا ٤" },
         courseAll:"هەمی مادە (١٢)", course1:"کۆرسێ ١ (نیڤا ساڵێ)", course2:"کۆرسێ ٢ (سەرێ ساڵێ)",
         searchPh:"گەڕان د ناڤ مادەیان دا...", noMatch:"هیچ مادەیەک نەهاتە دیتن.",
-        honorAdminTitle:"پشتگیرییا قوتابیێن زیرەک (٣ یەکەمێن قۆناغێ)", honorAdminDesc:"ناڤێ ٣ قوتابیێن یەکەم، تێکڕا، و پەیاما پشتگیریێ بنڤیسە:", saveHonor:"تۆمارکرنا ٣ یەکەمێن قۆناغێ",
-        honorPublicTitle:"🌟 ٣ یەکەمێن قۆناغێ و پشتگیرییا قوتابیێن زیرەک", honorPublicSub:"پێزانین و هاندان بۆ قوتابیێن زیرەک و بەردەوام د خواندنێ دا.",
-        rankPrefix:"پلەیا", studentNamePh:"ناڤێ قوتابیێ زیرەک", scorePh:"تێکڕا یان پۆینت", supportMsgPh:"پەیاما پشتگیریێ...", noHonorEntry:"هیشتا ناڤێ قوتابی نەهاتییە تۆمارکرن.",
+        honorAdminTitle:"🏆 نینەرێ قۆناغێ و ٣ سەرکەفتییێن هەر کۆرسەکێ (١، ٢، ٣)", saveHonor:"تۆمارکرنا نینەری و ٣ سەرکەفتییان",
+        honorPublicTitle:"🌟 ٣ سەرکەفتییێن قۆناغێ (١، ٢، ٣)", honorPublicSub:"سەرکەفتییێن یەکەم، دویەم، و سێیەم بۆ هەر کۆرسەکێ.",
+        rankPrefix:"سەرکەفتییێ", studentNamePh:"ناڤێ قوتابیێ سەرکەفتی", scorePh:"تێکڕا یان پۆینت", supportMsgPh:"پەیاما پشتگیریێ...", noHonorEntry:"هیشتا ناڤ نەهاتییە تۆمارکرن.",
         twelveSubjectsAdminTitle:"رێکخستنا ١٢ مادەیێن قۆناغا هەلبژارتی (PDF & وێنە)", saveAllSubjects:"تۆمارکرنا هەمی ١٢ مادەیان",
         addDept:"زێدەکرنا بەش یان تێبینییەکا گشتی", deptNamePh:"ناڤێ بەشی یان تێبینییێ", deptCodePh:"قۆناغ یان کۆد", save:"تۆمارکرن",
         addAnn:"بڵاڤکرنا ئاگادارییەکا نوو", annTitlePh:"سەردێڕێ ئاگادارییێ", annBodyPh:"ناڤەرۆکا ئاگادارییێ بنڤیسە...", publish:"بڵاڤکرن",
         deptList:"بەش و زانیاریێن تۆمارکری", annList:"ئاگاداریێن کۆلێژێ", delete:"ژێبرن", wrongPin:"کۆدێ PIN یێ خەڵەتە!", fillFields:"هیڤیە خانەیان پر بکە.", empty:"هیشتا چ داتا نەهاتینە تۆمارکرن.",
         subjectPrefix:"مادەیێ", subjectNamePh:"ناڤێ مادەیێ", pdfLinkPh:"لینکێ PDF", imgLinkPh:"لینکێ وێنەی", openPdf:"ڤەکرنا PDF", openImg:"بینینا وێنەی", noPdf:"PDF نینە", noImg:"وێنە نینە",
-        savedSubjects:"هەمی ١٢ مادە هاتنە تۆمارکرن!", savedHonor:"٣ یەکەمێن قۆناغێ هاتنە تۆمارکرن!",
+        savedSubjects:"هەمی ١٢ مادە هاتنە تۆمارکرن!", savedHonor:"نینەرێ قۆناغێ و ٣ سەرکەفتی هاتنە تۆمارکرن!",
         gpaTitle:"هەژمارکەرێ تێکڕایێ ١٢ مادەیان", gpaDesc:"نمرەیێن خۆ یێن ڤێ قۆناغێ (ژ ١٠٠) بنڤیسە:", calcGpaBtn:"هەژمارتنا تێکڕایێ",
         gpaDefault:"تێکڕا: —", gpaNoGrades:"هیچ نمرەیەک نەهاتییە نڤیسین.", gpaAvgText:(a,c)=>`تێکڕا: ${a}% (${c}/12 مادە)`,
         statsToolTitle:"هەژمارکەرێ ب لەز یێ ئامارێ (Mean / Variance / SD)", statsToolDesc:"ژمارەیان ب کۆما یان بۆشایی بنڤیسە:", calcStatsBtn:"هەژمارتنا ئاماری",
@@ -390,29 +531,50 @@
         notesTitle:"تێبینییێن تایبەت (My Notes)", notesDesc:"تێبینییێن خۆ بنڤیسە:", saveNotesBtn:"هەڵگرتنا تێبینییان",
         profileJoinTitle:"👤 My Profile — چوونا ژوورێ (Student Join)", profileJoinDesc:"ناڤ و زانیاریێن خۆ یێن قوتابییێ بنڤیسە دا ب پرۆفایلێ خۆ بچییە ژوورێ:",
         profNamePh:"ناڤێ تە یێ تەمام", profIdPh:"کۆدێ قوتابییێ یان ئیمەیل", joinBtn:"Join (چوونە ژوورێ قوتابی)", logoutProfBtn:"Logout (دەرچوون)",
-        profileCardTitle:"زانیاریێن پرۆفایلێ قوتابی", profileEmpty:"هیشتا چ قوتابییەک نەهاتییە ژوورێ.", enterNameFirst:"هیڤیە ناڤێ خۆ بنڤیسە.",
+        profileCardTitle:"زانیاریێن پرۆفایلێ قوتابی", profileEmpty:"هیشتا چ قوتابییەک نەهاتییە ژوورێ.", enterNameFirst:"هیڤیە ناڤێ خۆ بنڤیسە.", joinedToast:"ب سەرکەفتی Join بوو و ناڤێ تە هاتە تۆمارکرن.",
         themeSettingTitle:"ڕەنگ و شێوازێ شاشەی", themeSettingDesc:"رەنگێ گونجای هەلبژێرە:", themeDark:"Midnight Blue", themeLight:"Clean Light", themeGold:"Royal Gold & Dark",
         fontSettingTitle:"قەبارەیێ نڤیسینێ", fontSettingDesc:"قەبارەیێ نڤیسینێ ب گونجێنە:", fontSmall:"بچووک (Small)", fontNormal:"ئاسایی (Normal)", fontLarge:"مەزن (Large)"
       },
       ar: {
         dir:"rtl", title:"MyCollege", student:"طالب (Student)", deptAdmin:"مسؤول القسم (Department Admin)", superAdmin:"المدير العام (Super Admin)",
         pinPlaceholder:"رمز PIN", unlock:"دخول", logout:"خروج", statusPrefix:"الحالة الحالية:",
-        tabSubjects:"الأقسام والمراحل (12 مادة)", tabTools:"أدوات الكلية", tabProfile:"My Profile (👤)", tabSettings:"الإعدادات (⚙️)",
-        adminTitle:"لوحة الإدارة المتقدمة", adminDesc:"تحكم كامل بـ 12 مادة للمرحلة المختارة، كورسـين، أوائل المرحلة، والإعلانات.",
-        statSubLabel:"مواد المرحلة", statAnnLabel:"الإعلانات المنشورة", statDeptLabel:"الأقسام والملاحظات", statHonorLabel:"الأوائل المسجلون",
+        tabSubjects:"الأقسام والمراحل (12 مادة)", tabRoom:"قاعة المحاضرة (🎙️ Live Room)", tabTools:"أدوات الكلية", tabProfile:"My Profile (👤)", tabSettings:"الإعدادات (⚙️)",
+        adminTitle:"لوحة الإدارة المتقدمة", adminDesc:"تحكم بروابط المراحل الـ 4 (ON/OFF)، 12 مادة، المحاضرات، الـ 3 الأوائل لكل كورس، ممثل كل مرحلة، والطلاب المنضمين.",
+        statSubLabel:"مواد المرحلة", statJoinedLabel:"الطلاب المنضمون", statAnnLabel:"الإعلانات المنشورة", statHonorLabel:"المتفوقون المسجلون",
+        superStageLinksTitle:"🔗 التحكم بروابط المراحل الـ 4 للبث المباشر (Super Admin ON / OFF)",
+        superStageLinksDesc:"أنشئ رابطاً خاصاً لكل مرحلة وفعّله أو عطّله (ON/OFF) ليستخدمه الأستاذ والطلاب.",
+        saveStageLinksBtn:"حفظ روابط وحالة (ON/OFF) المراحل الـ 4", stageLinksSaved:"تم حفظ روابط وحالة المراحل الـ 4!",
+        linkOn:"ON (نشط)", linkOff:"OFF (مغلق)", joinLiveBtn:"🎙️ Join Live Room", copyLinkBtn:"📋 Copy Stage Link", linkCopied:"تم نسخ رابط المرحلة!",
+        roomClosedMsg:"رابط القاعة المباشرة لهذه المرحلة مغلق حالياً (OFF). يمكن للـ Super Admin تشغيله.",
+        startBroadcastBtn:"📡 بدء المايك المباشر (Go Live Audio)", stopBroadcastBtn:"⏹️ إيقاف المايك",
+        micNotAllowed:"لم يتم السماح بالوصول إلى المايكروفون.", raiseHandBtn:"✋ رفع اليد (Raise Hand)", lowerHandBtn:"👇 إنزال اليد",
+        raisedHandsLabel:"الطلاب رافعو الأيدي (✋):", noRaisedHands:"لم يرفع أحد يده بعد.",
+        repInputLabel:"اسم ممثل هذه المرحلة:", repInputPh:"اسم ممثل المرحلة...", repBadgePrefix:"ممثل المرحلة:", repEmpty:"—",
+        honorCourseLabel:"اختر الكورس للـ 3 الأوائل:",
+        addLecTitle:"🎙️ إضافة محاضرة للمادة (شرح، صوت، لون، أستاذ)",
+        lecTitlePh:"عنوان المحاضرة", lecTeacherPh:"اسم الأستاذ", lecAudioPh:"رابط الصوت (Audio URL)",
+        lecExplainPh:"شرح المحاضرة وملاحظاتها...", saveLecBtn:"إضافة المحاضرة", teacherLabel:"الأستاذ:",
+        audioBtn:"🎧 صوت المحاضرة", lecSaved:"تمت إضافة المحاضرة!", joinedStudentsAdminTitle:"👥 الطلاب المنضمون (Joined)",
+        createRoomTitle:"🎙️ قاعة المرحلة المباشرة (للأستاذ)", createRoomDesc:"يختار الأستاذ مادته ويحدد اللون والصوت ويشرح بالمايك المباشر عندما يكون رابط المرحلة ON.",
+        roomTeacherPh:"اسم الأستاذ", roomTopicPh:"عنوان المحاضرة", roomAudioUrlPh:"رابط الصوت (Audio Stream / MP3)",
+        roomNotesPh:"شرح أو نقاط مهمة للمحاضرة...", createRoomBtn:"فتح / تحديث القاعة",
+        activeRoomStageTitle:"🎧 القاعة المباشرة والاستماع + رفع اليد (✋)", noRoomSelectedMsg:"اختر أو افتح قاعة لعرض الصوت، اللون، الشرح، رفع اليد، والطلاب المنضمين.",
+        roomsListTitle:"🏛️ قاعات المحاضرات لهذه المرحلة", joinRoomBtn:"Join Room (انضمام)", leaveRoomBtn:"Leave Room (مغادرة)",
+        listenersLabel:"الطلاب المنضمون في القاعة:", noListeners:"لا يوجد طلاب منضمون بعد.",
+        askPlaceholder:"اكتب سؤالاً أو ملاحظة للأستاذ...", sendAskBtn:"إرسال", roomCreated:"تم فتح قاعة المحاضرة!",
         selectDeptTitle:"أقسام الكلية", statDeptName:"Statistics (الإحصاء)", statDeptDesc:"4 مراحل • كورسـان • 12 مادة لكل مرحلة",
         selectStageTitle:"اختر المرحلة", stageNames:{ 1:"المرحلة 1", 2:"المرحلة 2", 3:"المرحلة 3", 4:"المرحلة 4" },
         courseAll:"كل المواد (12)", course1:"الكورس 1 (نصف السنة)", course2:"الكورس 2 (نهاية السنة)",
         searchPh:"ابحث في المواد...", noMatch:"لم يتم العثور على مادة مطابقة.",
-        honorAdminTitle:"دعم الطلاب المتفوقين (أوائل المرحلة الـ 3)", honorAdminDesc:"أدخل أسماء الطلاب الـ 3 المتفوقين، المعدل، ورسالة الدعم:", saveHonor:"حفظ أوائل المرحلة الـ 3",
-        honorPublicTitle:"🌟 أوائل المرحلة ودعم الطلاب المتفوقين", honorPublicSub:"تكريم وتحفيز للطلبة المتميزين في مسيرتهم الدراسية.",
-        rankPrefix:"المركز", studentNamePh:"اسم الطالب المتفوق", scorePh:"المعدل أو التقدير", supportMsgPh:"رسالة دعم أو تهنئة...", noHonorEntry:"لم يتم تسجيل اسم طالب بعد.",
+        honorAdminTitle:"🏆 ممثل المرحلة والـ 3 الأوائل لكل كورس (1، 2، 3)", saveHonor:"حفظ الممثل والـ 3 الأوائل",
+        honorPublicTitle:"🌟 الـ 3 الأوائل في المرحلة (1، 2، 3)", honorPublicSub:"الأول، الثاني، والثالث لكل كورس.",
+        rankPrefix:"المتفوق", studentNamePh:"اسم الطالب المتفوق", scorePh:"المعدل أو التقدير", supportMsgPh:"رسالة دعم أو تهنئة...", noHonorEntry:"لم يتم تسجيل اسم بعد.",
         twelveSubjectsAdminTitle:"إدارة 12 مادة للمرحلة المختارة (PDF & صور)", saveAllSubjects:"حفظ جميع الـ 12 مادة",
         addDept:"إضافة قسم أو ملاحظة عامة", deptNamePh:"اسم القسم أو الملاحظة", deptCodePh:"المرحلة أو الرمز", save:"حفظ",
         addAnn:"نشر إعلان جديد", annTitlePh:"عنوان الإعلان", annBodyPh:"اكتب نص الإعلان...", publish:"نشر",
         deptList:"الأقسام والمعلومات المسجلة", annList:"إعلانات الكلية", delete:"حذف", wrongPin:"رمز PIN غير صحيح!", fillFields:"يرجى ملء الحقول المطلوبة.", empty:"لا توجد بيانات مسجلة حتى الآن.",
         subjectPrefix:"المادة", subjectNamePh:"اسم المادة", pdfLinkPh:"رابط PDF", imgLinkPh:"رابط الصورة", openPdf:"فتح PDF", openImg:"عرض الصورة", noPdf:"لا يوجد PDF", noImg:"لا توجد صورة",
-        savedSubjects:"تم حفظ جميع الـ 12 مادة بنجاح!", savedHonor:"تم حفظ أوائل المرحلة الـ 3!",
+        savedSubjects:"تم حفظ جميع الـ 12 مادة بنجاح!", savedHonor:"تم حفظ ممثل المرحلة والـ 3 الأوائل!",
         gpaTitle:"حاسبة معدل الـ 12 مادة", gpaDesc:"أدخل درجاتك لهذه المرحلة (من 100):", calcGpaBtn:"حساب المعدل",
         gpaDefault:"المعدل: —", gpaNoGrades:"لم يتم إدخال أي درجة.", gpaAvgText:(a,c)=>`المعدل: ${a}% (${c}/12 مادة)`,
         statsToolTitle:"حاسبة إحصائية سريعة (Mean / Variance / SD)", statsToolDesc:"أدخل الأرقام مفصولة بفاصلة أو مسافة:", calcStatsBtn:"حساب الإحصاء",
@@ -424,29 +586,50 @@
         notesTitle:"ملاحظاتي الخاصة (My Notes)", notesDesc:"اكتب ملاحظاتك هنا:", saveNotesBtn:"حفظ الملاحظات",
         profileJoinTitle:"👤 My Profile — دخول الطالب (Student Join)", profileJoinDesc:"أدخل بياناتك للدخول إلى ملفك الشخصي كطالب:",
         profNamePh:"الاسم الكامل", profIdPh:"الرقم الجامعي أو البريد", joinBtn:"Join (دخول الطالب)", logoutProfBtn:"Logout (خروج)",
-        profileCardTitle:"بيانات ملف الطالب", profileEmpty:"لم يسجل أي طالب دخوله بعد.", enterNameFirst:"يرجى إدخال الاسم.",
+        profileCardTitle:"بيانات ملف الطالب", profileEmpty:"لم يسجل أي طالب دخوله بعد.", enterNameFirst:"يرجى إدخال الاسم.", joinedToast:"تم الانضمام وتسجيل اسمك بنجاح.",
         themeSettingTitle:"ألوان ومظهر الشاشة", themeSettingDesc:"اختر المظهر المناسب:", themeDark:"Midnight Blue", themeLight:"Clean Light", themeGold:"Royal Gold & Dark",
         fontSettingTitle:"حجم الخط", fontSettingDesc:"اضبط حجم الخط:", fontSmall:"صغير (Small)", fontNormal:"عادي (Normal)", fontLarge:"كبير (Large)"
       },
       en: {
         dir:"ltr", title:"MyCollege", student:"Student", deptAdmin:"Department Admin", superAdmin:"Super Admin",
         pinPlaceholder:"PIN", unlock:"Unlock", logout:"Logout", statusPrefix:"Active Role:",
-        tabSubjects:"Departments & Stages (12 Subjects)", tabTools:"College Tools", tabProfile:"My Profile (👤)", tabSettings:"Settings (⚙️)",
-        adminTitle:"Enhanced Admin Control Center", adminDesc:"Full control over 12 subjects per stage, 2 courses, Top 3 honor students, and announcements.",
-        statSubLabel:"Stage Subjects", statAnnLabel:"Published Notices", statDeptLabel:"Departments & Notes", statHonorLabel:"Honor Students",
+        tabSubjects:"Departments & Stages (12 Subjects)", tabRoom:"Lecture Hall (🎙️ Live Room)", tabTools:"College Tools", tabProfile:"My Profile (👤)", tabSettings:"Settings (⚙️)",
+        adminTitle:"Enhanced Admin Control Center", adminDesc:"Control stage links (ON/OFF), 12 subjects, lectures, top 3 per course, stage representative, and joined students.",
+        statSubLabel:"Stage Subjects", statJoinedLabel:"Joined Students", statAnnLabel:"Published Notices", statHonorLabel:"Top Achievers",
+        superStageLinksTitle:"🔗 Control Live Room Links for All 4 Stages (Super Admin ON / OFF)",
+        superStageLinksDesc:"Create a dedicated link per stage and toggle ON/OFF for teacher and student access.",
+        saveStageLinksBtn:"Save Links & Status (ON/OFF) for All 4 Stages", stageLinksSaved:"Stage links and ON/OFF status saved!",
+        linkOn:"ON (Active)", linkOff:"OFF (Closed)", joinLiveBtn:"🎙️ Join Live Room", copyLinkBtn:"📋 Copy Stage Link", linkCopied:"Stage link copied!",
+        roomClosedMsg:"The live room link for this stage is currently OFF. Super Admin can turn it ON.",
+        startBroadcastBtn:"📡 Start Live Mic (Go Live Audio)", stopBroadcastBtn:"⏹️ Stop Live Mic",
+        micNotAllowed:"Microphone permission denied.", raiseHandBtn:"✋ Raise Hand", lowerHandBtn:"👇 Lower Hand",
+        raisedHandsLabel:"Raised Hands (✋):", noRaisedHands:"No raised hands yet.",
+        repInputLabel:"Stage Representative Name:", repInputPh:"Stage representative name...", repBadgePrefix:"Stage Rep:", repEmpty:"—",
+        honorCourseLabel:"Select course for Top 3:",
+        addLecTitle:"🎙️ Add Lecture to Subject (Explanation, Audio, Color, Teacher)",
+        lecTitlePh:"Lecture title", lecTeacherPh:"Teacher name", lecAudioPh:"Audio lecture URL",
+        lecExplainPh:"Lecture explanation & notes...", saveLecBtn:"Add Lecture", teacherLabel:"Teacher:",
+        audioBtn:"🎧 Audio Lecture", lecSaved:"Lecture added!", joinedStudentsAdminTitle:"👥 Joined Students",
+        createRoomTitle:"🎙️ Stage Live Room (Teacher)", createRoomDesc:"Teacher picks a subject, sets color & audio, and speaks live via mic when the stage link is ON.",
+        roomTeacherPh:"Teacher name", roomTopicPh:"Lecture topic", roomAudioUrlPh:"Audio URL (Stream / MP3)",
+        roomNotesPh:"Lecture explanation or key points...", createRoomBtn:"Open / Update Room",
+        activeRoomStageTitle:"🎧 Live Room & Listener + Raise Hand (✋)", noRoomSelectedMsg:"Select or open a room to view audio, color, notes, raised hands, and joined students.",
+        roomsListTitle:"🏛️ Lecture Rooms for This Stage", joinRoomBtn:"Join Room", leaveRoomBtn:"Leave Room",
+        listenersLabel:"Joined students in room:", noListeners:"No students joined yet.",
+        askPlaceholder:"Write a question or note to the teacher...", sendAskBtn:"Send", roomCreated:"Lecture room opened!",
         selectDeptTitle:"College Departments", statDeptName:"Statistics", statDeptDesc:"4 Stages • 2 Courses • 12 Subjects per stage",
         selectStageTitle:"Select Stage", stageNames:{ 1:"Stage 1", 2:"Stage 2", 3:"Stage 3", 4:"Stage 4" },
         courseAll:"All Subjects (12)", course1:"Course 1 (Mid-Year)", course2:"Course 2 (Final)",
         searchPh:"Search subjects...", noMatch:"No matching subject found.",
-        honorAdminTitle:"Honor Students Support (Top 3 of Stage)", honorAdminDesc:"Enter top 3 students, score/note, and supportive message:", saveHonor:"Save Top 3 Honor Roll",
-        honorPublicTitle:"🌟 Top 3 Stage Achievers & Student Support", honorPublicSub:"Recognition and encouragement for high-performing students.",
-        rankPrefix:"Rank", studentNamePh:"Top student name", scorePh:"GPA / Score / Note", supportMsgPh:"Supportive message...", noHonorEntry:"No student recorded yet.",
+        honorAdminTitle:"🏆 Stage Representative & Top 3 per Course (1, 2, 3)", saveHonor:"Save Rep & Top 3",
+        honorPublicTitle:"🌟 Top 3 Stage Achievers (1st, 2nd, 3rd)", honorPublicSub:"Top 1, 2, and 3 students per course.",
+        rankPrefix:"Top", studentNamePh:"Achiever name", scorePh:"GPA / Score / Note", supportMsgPh:"Supportive message...", noHonorEntry:"No name recorded yet.",
         twelveSubjectsAdminTitle:"12 Subjects Manager for Selected Stage (PDF & Images)", saveAllSubjects:"Save All 12 Subjects",
         addDept:"Add Department or Note", deptNamePh:"Department or note name", deptCodePh:"Stage or Code", save:"Save",
         addAnn:"Publish Announcement", annTitlePh:"Announcement title", annBodyPh:"Write announcement details...", publish:"Publish",
         deptList:"Registered Departments & Info", annList:"College Announcements", delete:"Delete", wrongPin:"Invalid PIN!", fillFields:"Please fill in the required fields.", empty:"No records found yet.",
         subjectPrefix:"Subject", subjectNamePh:"Subject name", pdfLinkPh:"PDF link", imgLinkPh:"Image link", openPdf:"Open PDF", openImg:"View Image", noPdf:"No PDF", noImg:"No image",
-        savedSubjects:"All 12 subjects saved successfully!", savedHonor:"Top 3 honor roll saved!",
+        savedSubjects:"All 12 subjects saved successfully!", savedHonor:"Stage rep and Top 3 saved!",
         gpaTitle:"12-Subject Average / GPA Calculator", gpaDesc:"Enter your grades for this stage (out of 100):", calcGpaBtn:"Calculate Average",
         gpaDefault:"Average: —", gpaNoGrades:"No grades entered yet.", gpaAvgText:(a,c)=>`Average: ${a}% (${c}/12 subjects)`,
         statsToolTitle:"Quick Statistics Tool (Mean / Variance / SD)", statsToolDesc:"Enter numbers separated by commas or spaces:", calcStatsBtn:"Calculate Stats",
@@ -458,18 +641,33 @@
         notesTitle:"My Personal Notes", notesDesc:"Write your study notes here:", saveNotesBtn:"Save Notes",
         profileJoinTitle:"👤 My Profile — Student Join", profileJoinDesc:"Enter your student details to join your profile:",
         profNamePh:"Full Name", profIdPh:"Student ID or Email", joinBtn:"Join (Student Login)", logoutProfBtn:"Logout",
-        profileCardTitle:"Student Profile Card", profileEmpty:"No student joined yet.", enterNameFirst:"Please enter your name.",
+        profileCardTitle:"Student Profile Card", profileEmpty:"No student joined yet.", enterNameFirst:"Please enter your name.", joinedToast:"Joined and recorded successfully.",
         themeSettingTitle:"Theme & Colors", themeSettingDesc:"Choose a visual theme:", themeDark:"Midnight Blue", themeLight:"Clean Light", themeGold:"Royal Gold & Dark",
         fontSettingTitle:"Font Size", fontSettingDesc:"Adjust text size:", fontSmall:"Small", fontNormal:"Normal", fontLarge:"Large"
       }
     };
 
+    const makeDefaultStageLink = (st) => {
+      const base = `${window.location.origin}${window.location.pathname}`;
+      return { enabled: false, url: `${base}?stage=${st}&live=1` };
+    };
+
     let currentLang = "ku", currentRole = "student", isAdminUnlocked = false;
     let activeDept = "statistics", activeStage = 1, activeCourse = "all", searchQuery = "";
     let stageSubjectsMap = JSON.parse(JSON.stringify(DEFAULT_STAGE_SUBJECTS));
-    let honorData = [{ rank: 1, name: "", score: "", message: "" }, { rank: 2, name: "", score: "", message: "" }, { rank: 3, name: "", score: "", message: "" }];
+    let lecturesMap = {};
+    let stageLinksMap = { 1: makeDefaultStageLink(1), 2: makeDefaultStageLink(2), 3: makeDefaultStageLink(3), 4: makeDefaultStageLink(4) };
+    let stageTopMap = {
+      1: { rep: "", c1: emptyThree(), c2: emptyThree() },
+      2: { rep: "", c1: emptyThree(), c2: emptyThree() },
+      3: { rep: "", c1: emptyThree(), c2: emptyThree() },
+      4: { rep: "", c1: emptyThree(), c2: emptyThree() }
+    };
     let studentProfile = null;
-    let cachedDepts = [], cachedAnns = [];
+    let cachedDepts = [], cachedAnns = [], cachedJoins = [], cachedRooms = [];
+    let selectedRoomId = null;
+    let micStream = null, micCtx = null, micRaf = null;
+    let peerConnections = {}, webrtcSignalUnsub = null;
 
     const langSelect = document.getElementById("langSelect");
     const roleSelect = document.getElementById("roleSelect");
@@ -477,6 +675,7 @@
     const unlockBtn = document.getElementById("unlockBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const adminPanel = document.getElementById("adminPanel");
+    const honorCourseSelect = document.getElementById("honorCourseSelect");
 
     function escapeHtml(s) {
       return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -486,21 +685,123 @@
       return stageSubjectsMap[activeStage] || DEFAULT_STAGE_SUBJECTS[activeStage];
     }
 
+    function getStageTop(st = activeStage) {
+      if (!stageTopMap[st]) stageTopMap[st] = { rep: "", c1: emptyThree(), c2: emptyThree() };
+      return stageTopMap[st];
+    }
+
+    function getStageLinkObj(st = activeStage) {
+      return stageLinksMap[st] || makeDefaultStageLink(st);
+    }
+
+    function getSelectedHonorCourse() {
+      if (isAdminUnlocked) return honorCourseSelect.value || "c1";
+      return activeCourse === "c2" ? "c2" : "c1";
+    }
+
+    function switchToTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tabId));
+      document.querySelectorAll(".tab-content").forEach((c) => c.classList.add("hidden"));
+      document.getElementById(tabId).classList.remove("hidden");
+    }
+
+    function openStageLiveTab() {
+      switchToTab("roomTab");
+      renderRoomsUI();
+    }
+
+    function copyCurrentStageLink() {
+      const t = i18n[currentLang];
+      const obj = getStageLinkObj(activeStage);
+      const link = obj.url || makeDefaultStageLink(activeStage).url;
+      navigator.clipboard?.writeText(link).catch(() => {});
+      alert(`${t.linkCopied}\n${link}`);
+    }
+
+    function renderSuperStageLinksForm() {
+      const t = i18n[currentLang];
+      const box = document.getElementById("superStageLinksBox");
+      const grid = document.getElementById("superStageLinksGrid");
+      const isSuper = isAdminUnlocked && currentRole === "super_admin";
+      box.classList.toggle("hidden", !isSuper);
+      if (!isSuper) return;
+
+      grid.innerHTML = [1, 2, 3, 4].map((st) => {
+        const obj = getStageLinkObj(st);
+        return `
+          <div class="stage-link-box">
+            <div class="row" style="justify-content:space-between;">
+              <strong>${escapeHtml(t.stageNames[st])}</strong>
+              <label class="row" style="cursor:pointer;">
+                <input type="checkbox" id="stageLinkEnabled_${st}" ${obj.enabled ? "checked" : ""} />
+                <span>${obj.enabled ? t.linkOn : t.linkOff}</span>
+              </label>
+            </div>
+            <input type="url" id="stageLinkUrl_${st}" value="${escapeHtml(obj.url || makeDefaultStageLink(st).url)}" placeholder="https://..." />
+          </div>`;
+      }).join("");
+    }
+
+    document.getElementById("saveStageLinksBtn").addEventListener("click", async () => {
+      if (!isAdminUnlocked || currentRole !== "super_admin") return;
+      [1, 2, 3, 4].forEach((st) => {
+        const enabled = Boolean(document.getElementById(`stageLinkEnabled_${st}`)?.checked);
+        const url = (document.getElementById(`stageLinkUrl_${st}`)?.value || "").trim() || makeDefaultStageLink(st).url;
+        stageLinksMap[st] = { enabled, url };
+      });
+      localStorage.setItem("mycollege_stage_links_map", JSON.stringify(stageLinksMap));
+      updateStageLinkBadges();
+      renderRoomsUI();
+      try {
+        await db.collection("college_config").doc("stage_live_links").set({
+          links: stageLinksMap, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch (e) {}
+      alert(i18n[currentLang].stageLinksSaved);
+    });
+
+    db.collection("college_config").doc("stage_live_links").onSnapshot((doc) => {
+      if (doc.exists && doc.data().links && typeof doc.data().links === "object") {
+        stageLinksMap = { ...stageLinksMap, ...doc.data().links };
+        localStorage.setItem("mycollege_stage_links_map", JSON.stringify(stageLinksMap));
+        updateStageLinkBadges();
+        renderSuperStageLinksForm();
+        renderRoomsUI();
+      }
+    });
+
+    function updateStageLinkBadges() {
+      const t = i18n[currentLang];
+      const obj = getStageLinkObj(activeStage);
+      const b1 = document.getElementById("stageRoomStatusBadge");
+      const b2 = document.getElementById("roomGateBadge");
+      const notice = document.getElementById("roomClosedNotice");
+      const label = obj.enabled ? t.linkOn : t.linkOff;
+      if (b1) { b1.textContent = label; b1.className = `badge ${obj.enabled ? "live" : "off"}`; }
+      if (b2) { b2.textContent = label; b2.className = `badge ${obj.enabled ? "live" : "off"}`; }
+      if (notice) notice.classList.toggle("hidden", Boolean(obj.enabled));
+    }
+
     function applyLanguage() {
       const t = i18n[currentLang];
       document.documentElement.lang = currentLang;
       document.documentElement.dir = t.dir;
       const mapText = {
         appTitle: t.title, optStudent: t.student, optDeptAdmin: t.deptAdmin, optSuperAdmin: t.superAdmin,
-        unlockBtn: t.unlock, logoutBtn: t.logout, tabSubjectsBtn: t.tabSubjects, tabToolsBtn: t.tabTools,
+        unlockBtn: t.unlock, logoutBtn: t.logout, tabSubjectsBtn: t.tabSubjects, tabRoomBtn: t.tabRoom, tabToolsBtn: t.tabTools,
         tabProfileBtn: t.tabProfile, tabSettingsBtn: t.tabSettings, adminPanelTitle: t.adminTitle, adminPanelDesc: t.adminDesc,
-        statSubLabel: t.statSubLabel, statAnnLabel: t.statAnnLabel, statDeptLabel: t.statDeptLabel,
-        statHonorLabel: t.statHonorLabel, selectDeptTitle: t.selectDeptTitle, statDeptName: t.statDeptName,
-        statDeptDesc: t.statDeptDesc, selectStageTitle: t.selectStageTitle,
-        stageBtn1: t.stageNames[1], stageBtn2: t.stageNames[2], stageBtn3: t.stageNames[3], stageBtn4: t.stageNames[4],
+        statSubLabel: t.statSubLabel, statJoinedLabel: t.statJoinedLabel, statAnnLabel: t.statAnnLabel, statHonorLabel: t.statHonorLabel,
+        superStageLinksTitle: t.superStageLinksTitle, superStageLinksDesc: t.superStageLinksDesc, saveStageLinksBtn: t.saveStageLinksBtn,
+        goStageLiveBtn: t.joinLiveBtn, copyStageLinkBtn: t.copyLinkBtn, roomClosedNotice: t.roomClosedMsg,
+        repInputLabel: t.repInputLabel, honorCourseLabel: t.honorCourseLabel,
+        addLecTitle: t.addLecTitle, saveLecBtn: t.saveLecBtn, joinedStudentsAdminTitle: t.joinedStudentsAdminTitle,
+        createRoomTitle: t.createRoomTitle, createRoomDesc: t.createRoomDesc, createRoomBtn: t.createRoomBtn,
+        startBroadcastBtn: t.startBroadcastBtn, stopBroadcastBtn: t.stopBroadcastBtn,
+        activeRoomStageTitle: t.activeRoomStageTitle, roomsListTitle: t.roomsListTitle,
+        selectDeptTitle: t.selectDeptTitle, statDeptName: t.statDeptName, statDeptDesc: t.statDeptDesc,
+        selectStageTitle: t.selectStageTitle, stageBtn1: t.stageNames[1], stageBtn2: t.stageNames[2], stageBtn3: t.stageNames[3], stageBtn4: t.stageNames[4],
         courseAllBtn: t.courseAll, course1Btn: t.course1, course2Btn: t.course2,
-        honorAdminTitle: t.honorAdminTitle, honorAdminDesc: t.honorAdminDesc, saveHonorBtn: t.saveHonor,
-        honorPublicTitle: t.honorPublicTitle, honorPublicSub: t.honorPublicSub,
+        honorAdminTitle: t.honorAdminTitle, saveHonorBtn: t.saveHonor, honorPublicTitle: t.honorPublicTitle, honorPublicSub: t.honorPublicSub,
         twelveSubjectsAdminTitle: t.twelveSubjectsAdminTitle, saveAllSubjectsBtn: t.saveAllSubjects,
         addDeptTitle: t.addDept, saveDeptBtn: t.save, addAnnTitle: t.addAnn, saveAnnBtn: t.publish,
         deptListTitle: t.deptList, annListTitle: t.annList, gpaTitle: t.gpaTitle, gpaDesc: t.gpaDesc, calcGpaBtn: t.calcGpaBtn,
@@ -509,8 +810,8 @@
         examSchedTitle: t.examSchedTitle, examSchedDesc: t.examSchedDesc, saveExamSchedBtn: t.saveExamSchedBtn,
         scheduleTitle: t.scheduleTitle, scheduleDesc: t.scheduleDesc, saveScheduleBtn: t.saveScheduleBtn,
         notesTitle: t.notesTitle, notesDesc: t.notesDesc, saveNotesBtn: t.saveNotesBtn,
-        profileJoinTitle: t.profileJoinTitle, profileJoinDesc: t.profileJoinDesc,
-        studentJoinBtn: t.joinBtn, studentLogoutBtn: t.logoutProfBtn, profileCardTitle: t.profileCardTitle,
+        profileJoinTitle: t.profileJoinTitle, profileJoinDesc: t.profileJoinDesc, studentJoinBtn: t.joinBtn,
+        studentLogoutBtn: t.logoutProfBtn, profileCardTitle: t.profileCardTitle,
         themeSettingTitle: t.themeSettingTitle, themeSettingDesc: t.themeSettingDesc,
         btnThemeDark: t.themeDark, btnThemeLight: t.themeLight, btnThemeGold: t.themeGold,
         fontSettingTitle: t.fontSettingTitle, fontSettingDesc: t.fontSettingDesc,
@@ -518,11 +819,23 @@
       };
       Object.entries(mapText).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.textContent = val; });
 
+      honorCourseSelect.options[0].textContent = t.course1;
+      honorCourseSelect.options[1].textContent = t.course2;
+
       document.getElementById("profStageSelect").innerHTML = [1,2,3,4].map(n=>`<option value="${n}">${t.stageNames[n]}</option>`).join("");
       if (studentProfile) document.getElementById("profStageSelect").value = String(studentProfile.stage || 1);
 
       pinInput.placeholder = t.pinPlaceholder;
+      document.getElementById("stageRepInput").placeholder = t.repInputPh;
       document.getElementById("subjectSearchInput").placeholder = t.searchPh;
+      document.getElementById("lecTitleInput").placeholder = t.lecTitlePh;
+      document.getElementById("lecTeacherInput").placeholder = t.lecTeacherPh;
+      document.getElementById("lecAudioInput").placeholder = t.lecAudioPh;
+      document.getElementById("lecExplainInput").placeholder = t.lecExplainPh;
+      document.getElementById("roomTeacherInput").placeholder = t.roomTeacherPh;
+      document.getElementById("roomTopicInput").placeholder = t.roomTopicPh;
+      document.getElementById("roomAudioUrlInput").placeholder = t.roomAudioUrlPh;
+      document.getElementById("roomNotesInput").placeholder = t.roomNotesPh;
       document.getElementById("deptName").placeholder = t.deptNamePh;
       document.getElementById("deptCode").placeholder = t.deptCodePh;
       document.getElementById("annTitle").placeholder = t.annTitlePh;
@@ -533,7 +846,13 @@
       if (!document.getElementById("gpaOutput").dataset.calculated) document.getElementById("gpaOutput").textContent = t.gpaDefault;
       if (!document.getElementById("countdownOutput").dataset.calculated) document.getElementById("countdownOutput").textContent = t.countdownDefault;
 
+      renderLectureSubjectOptions();
+      renderRoomSubjectOptions();
+      renderSuperStageLinksForm();
+      updateStageLinkBadges();
+      renderRoomsUI();
       renderProfileUI();
+      renderJoinedStudents();
       updateStageHeading();
       updateRoleUI();
       renderHonorDisplay();
@@ -545,6 +864,348 @@
       renderAnns();
       updateAdminStats();
     }
+
+    function renderRoomSubjectOptions() {
+      const t = i18n[currentLang];
+      const sel = document.getElementById("roomSubjectSelect");
+      const prev = sel.value;
+      sel.innerHTML = getStageList().map((s, i) => {
+        const idx = s.index || (i + 1);
+        const name = s.name && s.name.trim() ? s.name.trim() : `${t.subjectPrefix} ${idx}`;
+        return `<option value="${escapeHtml(name)}">${idx}. ${escapeHtml(name)}</option>`;
+      }).join("");
+      if (prev) sel.value = prev;
+    }
+
+    function stopLiveBroadcast() {
+      if (micStream) { micStream.getTracks().forEach(tr => tr.stop()); micStream = null; }
+      if (micRaf) { cancelAnimationFrame(micRaf); micRaf = null; }
+      if (micCtx) { micCtx.close(); micCtx = null; }
+      if (webrtcSignalUnsub) { webrtcSignalUnsub(); webrtcSignalUnsub = null; }
+      Object.values(peerConnections).forEach(pc => pc.close());
+      peerConnections = {};
+      document.getElementById("micLevelBar").style.width = "0%";
+      document.getElementById("startBroadcastBtn").classList.remove("hidden");
+      document.getElementById("stopBroadcastBtn").classList.add("hidden");
+    }
+
+    document.getElementById("startBroadcastBtn").addEventListener("click", async () => {
+      const t = i18n[currentLang];
+      if (!getStageLinkObj(activeStage).enabled && !isAdminUnlocked) return alert(t.roomClosedMsg);
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = micCtx.createMediaStreamSource(micStream);
+        const analyser = micCtx.createAnalyser();
+        analyser.fftSize = 256;
+        src.connect(analyser);
+        const data = new Uint8Array(analyser.frequencyBinCount);
+        document.getElementById("startBroadcastBtn").classList.add("hidden");
+        document.getElementById("stopBroadcastBtn").classList.remove("hidden");
+        const tick = () => {
+          if (!micStream) return;
+          analyser.getByteFrequencyData(data);
+          const avg = data.reduce((a, b) => a + b, 0) / data.length;
+          document.getElementById("micLevelBar").style.width = `${Math.min(100, Math.round((avg / 128) * 100))}%`;
+          micRaf = requestAnimationFrame(tick);
+        };
+        tick();
+
+        const roomId = selectedRoomId || `stage_${activeStage}_live`;
+        const roomRef = db.collection("webrtc_rooms").doc(roomId);
+        const offerCol = roomRef.collection("offers");
+        const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+        peerConnections[roomId] = pc;
+        micStream.getTracks().forEach(track => pc.addTrack(track, micStream));
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        await roomRef.set({ stage: activeStage, offer: { type: offer.type, sdp: offer.sdp }, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        webrtcSignalUnsub = roomRef.onSnapshot(async (snap) => {
+          const d = snap.data();
+          if (d && d.answer && !pc.currentRemoteDescription) {
+            await pc.setRemoteDescription(new RTCSessionDescription(d.answer));
+          }
+        });
+        void offerCol;
+      } catch (e) {
+        alert(t.micNotAllowed);
+      }
+    });
+
+    document.getElementById("stopBroadcastBtn").addEventListener("click", stopLiveBroadcast);
+
+    async function listenToLiveRoomAudio(roomId) {
+      const player = document.getElementById("teacherLiveAudioPlayer");
+      const roomRef = db.collection("webrtc_rooms").doc(roomId);
+      const snap = await roomRef.get();
+      if (!snap.exists || !snap.data().offer) return;
+      const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+      pc.ontrack = (ev) => {
+        if (ev.streams && ev.streams[0]) {
+          player.srcObject = ev.streams[0];
+          player.play?.().catch(() => {});
+        }
+      };
+      await pc.setRemoteDescription(new RTCSessionDescription(snap.data().offer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      await roomRef.set({ answer: { type: answer.type, sdp: answer.sdp } }, { merge: true });
+    }
+
+    document.getElementById("createRoomBtn").addEventListener("click", async () => {
+      const t = i18n[currentLang];
+      const stageLink = getStageLinkObj(activeStage);
+      if (!stageLink.enabled && !isAdminUnlocked) return alert(t.roomClosedMsg);
+      const subject = document.getElementById("roomSubjectSelect").value;
+      const teacher = document.getElementById("roomTeacherInput").value.trim();
+      const topic = document.getElementById("roomTopicInput").value.trim();
+      const color = document.getElementById("roomColorSelect").value;
+      const audioUrl = document.getElementById("roomAudioUrlInput").value.trim();
+      const notes = document.getElementById("roomNotesInput").value.trim();
+      if (!teacher && !topic) return alert(t.fillFields);
+
+      const ref = await db.collection("live_rooms").add({
+        stage: activeStage,
+        stageLinkUrl: stageLink.url || makeDefaultStageLink(activeStage).url,
+        subject,
+        teacher,
+        topic,
+        color,
+        audioUrl,
+        notes,
+        listeners: [],
+        raisedHands: [],
+        questions: [],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      selectedRoomId = ref.id;
+      document.getElementById("roomTopicInput").value = "";
+      document.getElementById("roomNotesInput").value = "";
+      alert(t.roomCreated);
+    });
+
+    db.collection("live_rooms").orderBy("createdAt", "desc").onSnapshot((snap) => {
+      cachedRooms = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const stageRooms = cachedRooms.filter(r => Number(r.stage || 1) === activeStage);
+      if (!stageRooms.some(r => r.id === selectedRoomId)) {
+        selectedRoomId = stageRooms[0]?.id || null;
+      }
+      renderRoomsUI();
+    });
+
+    function selectRoom(roomId) {
+      selectedRoomId = roomId;
+      renderRoomsUI();
+      listenToLiveRoomAudio(roomId).catch(() => {});
+    }
+
+    function getCurrentStudentLabel() {
+      const t = i18n[currentLang];
+      if (studentProfile && studentProfile.name) {
+        return `${studentProfile.name} (${t.stageNames[studentProfile.stage] || "Stage " + (studentProfile.stage || 1)})`;
+      }
+      return "";
+    }
+
+    async function joinRoom(roomId) {
+      const t = i18n[currentLang];
+      if (!getStageLinkObj(activeStage).enabled && !isAdminUnlocked) return alert(t.roomClosedMsg);
+      const listenerName = getCurrentStudentLabel() || (prompt(t.profNamePh) || "").trim();
+      if (!listenerName) return;
+      const room = cachedRooms.find(r => r.id === roomId);
+      const list = Array.isArray(room?.listeners) ? room.listeners : [];
+      if (!list.includes(listenerName)) {
+        await db.collection("live_rooms").doc(roomId).update({
+          listeners: firebase.firestore.FieldValue.arrayUnion(listenerName)
+        });
+      }
+      selectedRoomId = roomId;
+      listenToLiveRoomAudio(roomId).catch(() => {});
+    }
+
+    async function leaveRoom(roomId) {
+      const listenerName = getCurrentStudentLabel();
+      if (!listenerName) return;
+      await db.collection("live_rooms").doc(roomId).update({
+        listeners: firebase.firestore.FieldValue.arrayRemove(listenerName),
+        raisedHands: firebase.firestore.FieldValue.arrayRemove(listenerName)
+      });
+    }
+
+    async function toggleRaiseHand(roomId) {
+      const t = i18n[currentLang];
+      const who = getCurrentStudentLabel() || (prompt(t.profNamePh) || "").trim();
+      if (!who) return;
+      const room = cachedRooms.find(r => r.id === roomId);
+      const hands = Array.isArray(room?.raisedHands) ? room.raisedHands : [];
+      const exists = hands.includes(who);
+      await db.collection("live_rooms").doc(roomId).update({
+        raisedHands: exists
+          ? firebase.firestore.FieldValue.arrayRemove(who)
+          : firebase.firestore.FieldValue.arrayUnion(who)
+      });
+    }
+
+    async function sendRoomQuestion(roomId) {
+      const t = i18n[currentLang];
+      const inp = document.getElementById(`roomAskInput_${roomId}`);
+      if (!inp) return;
+      const text = inp.value.trim();
+      if (!text) return;
+      const sender = (studentProfile && studentProfile.name) ? studentProfile.name : t.student;
+      await db.collection("live_rooms").doc(roomId).update({
+        questions: firebase.firestore.FieldValue.arrayUnion(`${sender}: ${text}`)
+      });
+      inp.value = "";
+    }
+
+    async function deleteRoom(roomId) {
+      if (isAdminUnlocked) await db.collection("live_rooms").doc(roomId).delete();
+    }
+
+    function renderRoomsUI() {
+      const t = i18n[currentLang];
+      const grid = document.getElementById("roomsGrid");
+      const stageBox = document.getElementById("activeRoomBox");
+      if (!grid || !stageBox) return;
+
+      const stageRooms = cachedRooms.filter(r => Number(r.stage || 1) === activeStage);
+      grid.innerHTML = stageRooms.length ? stageRooms.map(r => {
+        const stLabel = t.stageNames[r.stage] || `Stage ${r.stage || 1}`;
+        const count = Array.isArray(r.listeners) ? r.listeners.length : 0;
+        const handCount = Array.isArray(r.raisedHands) ? r.raisedHands.length : 0;
+        return `
+          <div class="room-card" style="border-top-color:${escapeHtml(r.color || "#38bdf8")}">
+            <div class="row" style="justify-content:space-between;">
+              <span class="badge">${escapeHtml(r.subject || "")}</span>
+              <div class="row">
+                <span class="badge hand">✋ ${handCount}</span>
+                <span class="badge live">👥 ${count}</span>
+              </div>
+            </div>
+            <h4>${escapeHtml(r.topic || r.subject || "")}</h4>
+            ${r.teacher ? `<div class="muted">${escapeHtml(t.teacherLabel)} ${escapeHtml(r.teacher)} • ${escapeHtml(stLabel)}</div>` : `<div class="muted">${escapeHtml(stLabel)}</div>`}
+            ${r.notes ? `<p class="muted">${escapeHtml(r.notes)}</p>` : ""}
+            <div class="row">
+              <button class="primary" onclick="selectRoom('${r.id}')">${t.activeRoomStageTitle.split(" ")[0]}</button>
+              <button class="success" onclick="joinRoom('${r.id}')">${t.joinRoomBtn}</button>
+              ${isAdminUnlocked ? `<button class="danger" onclick="deleteRoom('${r.id}')">${t.delete}</button>` : ""}
+            </div>
+          </div>`;
+      }).join("") : `<p class="muted">${t.empty}</p>`;
+
+      const active = stageRooms.find(r => r.id === selectedRoomId) || stageRooms[0];
+      if (!active) {
+        stageBox.innerHTML = `<span class="muted">${t.noRoomSelectedMsg}</span>`;
+        return;
+      }
+      const listeners = Array.isArray(active.listeners) ? active.listeners : [];
+      const raisedHands = Array.isArray(active.raisedHands) ? active.raisedHands : [];
+      const questions = Array.isArray(active.questions) ? active.questions : [];
+      const myLabel = getCurrentStudentLabel();
+      const isHandRaised = myLabel ? raisedHands.includes(myLabel) : false;
+
+      stageBox.style.borderRight = `5px solid ${active.color || "#38bdf8"}`;
+      stageBox.innerHTML = `
+        <div class="row" style="justify-content:space-between;">
+          <div>
+            <h4>${escapeHtml(active.topic || active.subject || "")}</h4>
+            <div class="muted">${escapeHtml(active.subject || "")} ${active.teacher ? `• ${escapeHtml(t.teacherLabel)} ${escapeHtml(active.teacher)}` : ""}</div>
+          </div>
+          <span class="badge live">● LIVE</span>
+        </div>
+        ${active.notes ? `<div>${escapeHtml(active.notes)}</div>` : ""}
+        ${active.audioUrl ? `<div><audio controls src="${escapeHtml(active.audioUrl)}" style="width:100%;"></audio></div>` : ""}
+        <div class="row">
+          <button class="success" onclick="joinRoom('${active.id}')">${t.joinRoomBtn}</button>
+          <button class="gold" onclick="toggleRaiseHand('${active.id}')">${isHandRaised ? t.lowerHandBtn : t.raiseHandBtn}</button>
+          <button class="ghost" onclick="leaveRoom('${active.id}')">${t.leaveRoomBtn}</button>
+        </div>
+        <div>
+          <strong class="muted">${escapeHtml(t.raisedHandsLabel)} (${raisedHands.length})</strong>
+          <div class="row" style="margin-top:6px;">
+            ${raisedHands.length ? raisedHands.map(n => `<span class="badge hand">✋ ${escapeHtml(n)}</span>`).join("") : `<span class="muted">${t.noRaisedHands}</span>`}
+          </div>
+        </div>
+        <div>
+          <strong class="muted">${escapeHtml(t.listenersLabel)} (${listeners.length})</strong>
+          <div class="row" style="margin-top:6px;">
+            ${listeners.length ? listeners.map(n => `<span class="badge">👤 ${escapeHtml(n)}</span>`).join("") : `<span class="muted">${t.noListeners}</span>`}
+          </div>
+        </div>
+        <div class="row">
+          <input type="text" id="roomAskInput_${active.id}" placeholder="${t.askPlaceholder}" style="flex:1;" />
+          <button class="primary" onclick="sendRoomQuestion('${active.id}')">${t.sendAskBtn}</button>
+        </div>
+        ${questions.length ? `<div class="lec-list">${questions.map(q => `<div class="lec-box"><div>${escapeHtml(q)}</div></div>`).join("")}</div>` : ""}
+      `;
+    }
+
+    function renderLectureSubjectOptions() {
+      const t = i18n[currentLang];
+      const sel = document.getElementById("lecSubjectSelect");
+      const prev = sel.value;
+      sel.innerHTML = getStageList().map((s, i) => {
+        const idx = s.index || (i + 1);
+        const name = s.name && s.name.trim() ? s.name.trim() : `${t.subjectPrefix} ${idx}`;
+        return `<option value="${idx}">${idx}. ${escapeHtml(name)}</option>`;
+      }).join("");
+      if (prev) sel.value = prev;
+    }
+
+    document.getElementById("saveLecBtn").addEventListener("click", async () => {
+      if (!isAdminUnlocked) return;
+      const t = i18n[currentLang];
+      const subIdx = Number(document.getElementById("lecSubjectSelect").value) || 1;
+      const title = document.getElementById("lecTitleInput").value.trim();
+      const teacher = document.getElementById("lecTeacherInput").value.trim();
+      const color = document.getElementById("lecColorSelect").value;
+      const audioUrl = document.getElementById("lecAudioInput").value.trim();
+      const explanation = document.getElementById("lecExplainInput").value.trim();
+      if (!title && !explanation) return alert(t.fillFields);
+
+      const key = `${activeStage}_${subIdx}`;
+      const list = Array.isArray(lecturesMap[key]) ? [...lecturesMap[key]] : [];
+      list.push({ id: String(Date.now()), title, teacher, color, audioUrl, explanation });
+      lecturesMap[key] = list;
+      localStorage.setItem("mycollege_lectures_map", JSON.stringify(lecturesMap));
+
+      try {
+        await db.collection("college_config").doc(`stage_${activeStage}_lectures`).set({
+          stage: activeStage, lecturesMap, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch (e) {}
+
+      document.getElementById("lecTitleInput").value = "";
+      document.getElementById("lecTeacherInput").value = "";
+      document.getElementById("lecAudioInput").value = "";
+      document.getElementById("lecExplainInput").value = "";
+      renderSubjectsDisplay();
+      alert(t.lecSaved);
+    });
+
+    async function deleteLectureItem(subIdx, lecId) {
+      if (!isAdminUnlocked) return;
+      const key = `${activeStage}_${subIdx}`;
+      lecturesMap[key] = (lecturesMap[key] || []).filter(x => x.id !== lecId);
+      localStorage.setItem("mycollege_lectures_map", JSON.stringify(lecturesMap));
+      try {
+        await db.collection("college_config").doc(`stage_${activeStage}_lectures`).set({
+          stage: activeStage, lecturesMap, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch (e) {}
+      renderSubjectsDisplay();
+    }
+
+    [1, 2, 3, 4].forEach((st) => {
+      db.collection("college_config").doc(`stage_${st}_lectures`).onSnapshot((doc) => {
+        if (doc.exists && doc.data().lecturesMap && typeof doc.data().lecturesMap === "object") {
+          lecturesMap = { ...lecturesMap, ...doc.data().lecturesMap };
+          localStorage.setItem("mycollege_lectures_map", JSON.stringify(lecturesMap));
+          if (activeStage === st) renderSubjectsDisplay();
+        }
+      });
+    });
 
     function renderProfileUI() {
       const t = i18n[currentLang];
@@ -567,22 +1228,37 @@
       }
     }
 
-    document.getElementById("studentJoinBtn").addEventListener("click", () => {
+    document.getElementById("studentJoinBtn").addEventListener("click", async () => {
       const t = i18n[currentLang];
       const name = document.getElementById("profNameInput").value.trim();
       const stage = Number(document.getElementById("profStageSelect").value) || 1;
       const studentId = document.getElementById("profIdInput").value.trim();
       if (!name) return alert(t.enterNameFirst);
+
       studentProfile = { name, stage, studentId };
       localStorage.setItem("mycollege_student_profile", JSON.stringify(studentProfile));
       activeStage = stage;
       document.querySelectorAll(".stage-btn").forEach(b => b.classList.toggle("active", Number(b.dataset.stage) === stage));
+
+      try {
+        await db.collection("student_joins").add({
+          name, stage, studentId, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (e) {}
+
       renderProfileUI();
+      renderLectureSubjectOptions();
+      renderRoomSubjectOptions();
+      updateStageLinkBadges();
+      renderRoomsUI();
       updateStageHeading();
+      renderAdminHonorForm();
+      renderHonorDisplay();
       renderAdminSubjectsForm();
       renderSubjectsDisplay();
       renderGpaInputs();
       updateAdminStats();
+      alert(t.joinedToast);
     });
 
     document.getElementById("studentLogoutBtn").addEventListener("click", () => {
@@ -592,6 +1268,30 @@
       document.getElementById("profIdInput").value = "";
       renderProfileUI();
     });
+
+    db.collection("student_joins").orderBy("createdAt", "desc").onSnapshot((snap) => {
+      cachedJoins = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      renderJoinedStudents();
+      updateAdminStats();
+    });
+
+    function renderJoinedStudents() {
+      const el = document.getElementById("joinedStudentsList");
+      const t = i18n[currentLang];
+      if (!el) return;
+      el.innerHTML = cachedJoins.length
+        ? cachedJoins.map((x) => {
+            const stLabel = t.stageNames[x.stage] || `Stage ${x.stage || 1}`;
+            return `<div class="item">
+              <div>
+                <div class="item-title">👤 ${escapeHtml(x.name || "")} <span class="badge">${escapeHtml(stLabel)}</span></div>
+                ${x.studentId ? `<div class="muted">${escapeHtml(x.studentId)}</div>` : ""}
+              </div>
+              ${isAdminUnlocked ? `<button class="danger" onclick="deleteDocItem('student_joins','${x.id}')">${t.delete}</button>` : ""}
+            </div>`;
+          }).join("")
+        : `<p class="muted">${t.empty}</p>`;
+    }
 
     function selectDepartment(dept) {
       activeDept = dept;
@@ -604,6 +1304,8 @@
       const t = i18n[currentLang];
       const stageLabel = t.stageNames[activeStage] || `Stage ${activeStage}`;
       document.getElementById("activeStageHeading").textContent = `${t.statDeptName} — ${stageLabel}`;
+      const rep = (getStageTop(activeStage).rep || "").trim();
+      document.getElementById("stageRepBadge").textContent = `${t.repBadgePrefix} ${rep || t.repEmpty}`;
       const names = getStageList().map((s, i) => `${i + 1}. ${s.name && s.name.trim() ? s.name.trim() : `${t.subjectPrefix} ${i + 1}`}`);
       document.getElementById("activeStageSubjectsList").textContent = names.join("  •  ");
     }
@@ -613,7 +1315,12 @@
         activeStage = Number(btn.dataset.stage);
         document.querySelectorAll(".stage-btn").forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
-        updateStageHeading(); renderAdminSubjectsForm(); renderSubjectsDisplay(); renderGpaInputs(); updateAdminStats();
+        renderLectureSubjectOptions();
+        renderRoomSubjectOptions();
+        updateStageLinkBadges();
+        renderRoomsUI();
+        updateStageHeading(); renderAdminHonorForm(); renderHonorDisplay();
+        renderAdminSubjectsForm(); renderSubjectsDisplay(); renderGpaInputs(); updateAdminStats();
       });
     });
 
@@ -622,8 +1329,17 @@
         activeCourse = btn.dataset.course;
         document.querySelectorAll(".course-btn").forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
+        if (activeCourse === "c1" || activeCourse === "c2") {
+          honorCourseSelect.value = activeCourse;
+        }
+        renderHonorDisplay();
+        if (isAdminUnlocked) renderAdminHonorForm();
         renderSubjectsDisplay();
       });
+    });
+
+    honorCourseSelect.addEventListener("change", () => {
+      renderAdminHonorForm();
     });
 
     document.getElementById("subjectSearchInput").addEventListener("input", (e) => {
@@ -644,6 +1360,7 @@
       } else {
         pinInput.classList.add("hidden"); unlockBtn.classList.add("hidden"); logoutBtn.classList.remove("hidden"); adminPanel.classList.remove("hidden");
       }
+      renderSuperStageLinksForm();
     }
 
     langSelect.addEventListener("change", (e) => { currentLang = e.target.value; localStorage.setItem("mycollege_lang", currentLang); applyLanguage(); });
@@ -652,21 +1369,20 @@
     unlockBtn.addEventListener("click", () => {
       const pin = pinInput.value.trim();
       if ((currentRole === "super_admin" && pin === SUPER_ADMIN_PIN) || (currentRole === "dept_admin" && pin === DEPT_ADMIN_PIN)) {
-        isAdminUnlocked = true; pinInput.value = ""; updateRoleUI(); renderAdminHonorForm(); renderAdminSubjectsForm(); updateAdminStats(); renderDepts(); renderAnns();
+        isAdminUnlocked = true; pinInput.value = "";
+        updateRoleUI(); renderSuperStageLinksForm(); renderAdminHonorForm(); renderAdminSubjectsForm(); renderJoinedStudents(); renderRoomsUI(); renderSubjectsDisplay(); updateAdminStats(); renderDepts(); renderAnns();
       } else {
         alert(i18n[currentLang].wrongPin);
       }
     });
 
-    logoutBtn.addEventListener("click", () => { isAdminUnlocked = false; currentRole = "student"; roleSelect.value = "student"; updateRoleUI(); renderDepts(); renderAnns(); });
+    logoutBtn.addEventListener("click", () => {
+      isAdminUnlocked = false; currentRole = "student"; roleSelect.value = "student";
+      updateRoleUI(); renderSuperStageLinksForm(); renderJoinedStudents(); renderRoomsUI(); renderSubjectsDisplay(); renderDepts(); renderAnns();
+    });
 
     document.querySelectorAll(".tab-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-        document.querySelectorAll(".tab-content").forEach((c) => c.classList.add("hidden"));
-        btn.classList.add("active");
-        document.getElementById(btn.dataset.tab).classList.remove("hidden");
-      });
+      btn.addEventListener("click", () => switchToTab(btn.dataset.tab));
     });
 
     function setTheme(mode) {
@@ -683,46 +1399,89 @@
 
     function renderAdminHonorForm() {
       const t = i18n[currentLang], medals = ["🥇", "🥈", "🥉"];
-      document.getElementById("adminHonorGrid").innerHTML = honorData.map((h, i) => `
-        <div class="admin-subject-box">
-          <strong>${medals[i]} ${t.rankPrefix} #${i + 1}</strong>
-          <input type="text" id="honorName_${i}" value="${escapeHtml(h.name || "")}" placeholder="${t.studentNamePh}" />
-          <input type="text" id="honorScore_${i}" value="${escapeHtml(h.score || "")}" placeholder="${t.scorePh}" />
-          <input type="text" id="honorMsg_${i}" value="${escapeHtml(h.message || "")}" placeholder="${t.supportMsgPh}" />
-        </div>`).join("");
+      const stObj = getStageTop(activeStage);
+      document.getElementById("stageRepInput").value = stObj.rep || "";
+      const cKey = honorCourseSelect.value || "c1";
+      const list = stObj[cKey] || emptyThree();
+      document.getElementById("adminHonorGrid").innerHTML = [0,1,2].map((i) => {
+        const h = list[i] || { name: "", score: "", message: "" };
+        return `
+          <div class="admin-subject-box">
+            <strong>${medals[i]} ${t.rankPrefix} #${i + 1}</strong>
+            <input type="text" id="honorName_${i}" value="${escapeHtml(h.name || "")}" placeholder="${t.studentNamePh}" />
+            <input type="text" id="honorScore_${i}" value="${escapeHtml(h.score || "")}" placeholder="${t.scorePh}" />
+            <input type="text" id="honorMsg_${i}" value="${escapeHtml(h.message || "")}" placeholder="${t.supportMsgPh}" />
+          </div>`;
+      }).join("");
     }
 
     function renderHonorDisplay() {
       const t = i18n[currentLang], medals = ["🥇", "🥈", "🥉"];
-      document.getElementById("honorDisplayGrid").innerHTML = honorData.map((h, i) => `
-        <div class="top-student-card rank-${i + 1}">
-          <span class="rank-badge">${medals[i]} ${t.rankPrefix} #${i + 1}</span>
-          <div class="item-title">${h.name && h.name.trim() ? escapeHtml(h.name.trim()) : `<span class="muted">${t.noHonorEntry}</span>`}</div>
-          ${h.score ? `<div class="badge">${escapeHtml(h.score.trim())}</div>` : ""}
-          ${h.message ? `<p class="muted">${escapeHtml(h.message.trim())}</p>` : ""}
-        </div>`).join("");
+      const cKey = getSelectedHonorCourse();
+      document.getElementById("honorCourseBadge").textContent = cKey === "c1" ? t.course1 : t.course2;
+      const list = (getStageTop(activeStage)[cKey]) || emptyThree();
+      document.getElementById("honorDisplayGrid").innerHTML = [0,1,2].map((i) => {
+        const h = list[i] || { name: "", score: "", message: "" };
+        return `
+          <div class="top-student-card rank-${i + 1}">
+            <span class="rank-badge">${medals[i]} ${t.rankPrefix} #${i + 1}</span>
+            <div class="item-title">${h.name && h.name.trim() ? escapeHtml(h.name.trim()) : `<span class="muted">${t.noHonorEntry}</span>`}</div>
+            ${h.score ? `<div class="badge">${escapeHtml(h.score.trim())}</div>` : ""}
+            ${h.message ? `<p class="muted">${escapeHtml(h.message.trim())}</p>` : ""}
+          </div>`;
+      }).join("");
     }
 
     document.getElementById("saveHonorBtn").addEventListener("click", async () => {
       if (!isAdminUnlocked) return;
-      honorData = honorData.map((_, i) => ({
+      const stObj = getStageTop(activeStage);
+      const repVal = document.getElementById("stageRepInput").value.trim();
+      const cKey = honorCourseSelect.value || "c1";
+      const arr = [0,1,2].map((i) => ({
         rank: i + 1,
         name: document.getElementById(`honorName_${i}`).value.trim(),
         score: document.getElementById(`honorScore_${i}`).value.trim(),
         message: document.getElementById(`honorMsg_${i}`).value.trim()
       }));
-      renderHonorDisplay(); updateAdminStats();
-      localStorage.setItem("mycollege_honor_cache", JSON.stringify(honorData));
-      try { await db.collection("college_config").doc("honor_roll").set({ topThree: honorData, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); } catch (e) {}
+      stageTopMap[activeStage] = {
+        rep: repVal,
+        c1: cKey === "c1" ? arr : (stObj.c1 || emptyThree()),
+        c2: cKey === "c2" ? arr : (stObj.c2 || emptyThree())
+      };
+      localStorage.setItem("mycollege_stage_top_map", JSON.stringify(stageTopMap));
+      updateStageHeading();
+      renderHonorDisplay();
+      updateAdminStats();
+      try {
+        await db.collection("college_config").doc(`stage_${activeStage}_top`).set({
+          stage: activeStage,
+          rep: stageTopMap[activeStage].rep,
+          c1: stageTopMap[activeStage].c1,
+          c2: stageTopMap[activeStage].c2,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      } catch (e) {}
       alert(i18n[currentLang].savedHonor);
     });
 
-    db.collection("college_config").doc("honor_roll").onSnapshot((doc) => {
-      if (doc.exists && Array.isArray(doc.data().topThree) && doc.data().topThree.length === 3) {
-        honorData = doc.data().topThree;
-        localStorage.setItem("mycollege_honor_cache", JSON.stringify(honorData));
-        renderHonorDisplay(); if (isAdminUnlocked) renderAdminHonorForm(); updateAdminStats();
-      }
+    [1, 2, 3, 4].forEach((st) => {
+      db.collection("college_config").doc(`stage_${st}_top`).onSnapshot((doc) => {
+        if (doc.exists) {
+          const d = doc.data();
+          stageTopMap[st] = {
+            rep: typeof d.rep === "string" ? d.rep : "",
+            c1: Array.isArray(d.c1) && d.c1.length === 3 ? d.c1 : emptyThree(),
+            c2: Array.isArray(d.c2) && d.c2.length === 3 ? d.c2 : emptyThree()
+          };
+          localStorage.setItem("mycollege_stage_top_map", JSON.stringify(stageTopMap));
+          if (activeStage === st) {
+            updateStageHeading();
+            renderHonorDisplay();
+            if (isAdminUnlocked) renderAdminHonorForm();
+            updateAdminStats();
+          }
+        }
+      });
     });
 
     function renderAdminSubjectsForm() {
@@ -754,17 +1513,31 @@
         return;
       }
       document.getElementById("subjectsDisplayGrid").innerHTML = filtered.map((s) => {
-        const idx = (s.index || 1) - 1;
+        const subNum = s.index || 1;
+        const idx = subNum - 1;
         const c = s.course || (idx < 6 ? "c1" : "c2");
         const cLabel = c === "c1" ? t.course1 : t.course2;
-        const name = s.name && s.name.trim() ? s.name.trim() : `${t.subjectPrefix} ${s.index || idx + 1}`;
+        const name = s.name && s.name.trim() ? s.name.trim() : `${t.subjectPrefix} ${subNum}`;
+        const lecs = lecturesMap[`${activeStage}_${subNum}`] || [];
+        const lecsHtml = lecs.length ? `<div class="lec-list">${lecs.map(l => `
+          <div class="lec-box" style="border-right-color:${escapeHtml(l.color || "#38bdf8")}">
+            <div class="row" style="justify-content:space-between;">
+              <strong>${escapeHtml(l.title || "")}</strong>
+              ${isAdminUnlocked ? `<button class="danger" style="padding:3px 8px;font-size:.75em;" onclick="deleteLectureItem(${subNum},'${l.id}')">${t.delete}</button>` : ""}
+            </div>
+            ${l.teacher ? `<div class="muted">${escapeHtml(t.teacherLabel)} ${escapeHtml(l.teacher)}</div>` : ""}
+            ${l.explanation ? `<div>${escapeHtml(l.explanation)}</div>` : ""}
+            ${l.audioUrl && l.audioUrl.trim() ? `<div><a class="link-pill audio" href="${escapeHtml(l.audioUrl.trim())}" target="_blank" rel="noopener noreferrer">${t.audioBtn}</a></div>` : ""}
+          </div>`).join("")}</div>` : "";
+
         return `
           <div class="subject-card">
-            <div class="subject-header"><h4>${escapeHtml(name)}</h4><span class="subject-num">#${s.index || idx + 1} • ${escapeHtml(cLabel)}</span></div>
+            <div class="subject-header"><h4>${escapeHtml(name)}</h4><span class="subject-num">#${subNum} • ${escapeHtml(cLabel)}</span></div>
             <div class="links-group">
               ${s.pdfUrl && s.pdfUrl.trim() ? `<a class="link-pill pdf" href="${escapeHtml(s.pdfUrl.trim())}" target="_blank" rel="noopener noreferrer">📄 ${t.openPdf}</a>` : `<span class="muted">📄 ${t.noPdf}</span>`}
               ${s.imageUrl && s.imageUrl.trim() ? `<a class="link-pill img" href="${escapeHtml(s.imageUrl.trim())}" target="_blank" rel="noopener noreferrer">🖼️ ${t.openImg}</a>` : `<span class="muted">🖼️ ${t.noImg}</span>`}
             </div>
+            ${lecsHtml}
           </div>`;
       }).join("");
     }
@@ -779,7 +1552,7 @@
         imageUrl: document.getElementById(`subjImg_${i}`).value.trim()
       }));
       stageSubjectsMap[activeStage] = updated;
-      updateStageHeading(); renderSubjectsDisplay(); renderGpaInputs(); updateAdminStats();
+      renderLectureSubjectOptions(); renderRoomSubjectOptions(); updateStageHeading(); renderSubjectsDisplay(); renderGpaInputs(); updateAdminStats();
       localStorage.setItem("mycollege_stages_subjects", JSON.stringify(stageSubjectsMap));
       try {
         await db.collection("college_config").doc(`stage_${activeStage}_subjects`).set({
@@ -795,7 +1568,7 @@
           stageSubjectsMap[st] = doc.data().subjects;
           localStorage.setItem("mycollege_stages_subjects", JSON.stringify(stageSubjectsMap));
           if (activeStage === st) {
-            updateStageHeading(); renderSubjectsDisplay(); renderGpaInputs(); updateAdminStats();
+            renderLectureSubjectOptions(); renderRoomSubjectOptions(); updateStageHeading(); renderSubjectsDisplay(); renderGpaInputs(); updateAdminStats();
             if (isAdminUnlocked) renderAdminSubjectsForm();
           }
         }
@@ -848,10 +1621,12 @@
 
     function updateAdminStats() {
       const activeSubj = getStageList().filter((s) => (s.name && s.name.trim()) || (s.pdfUrl && s.pdfUrl.trim()) || (s.imageUrl && s.imageUrl.trim())).length;
-      const activeHonor = honorData.filter((h) => h.name && h.name.trim()).length;
+      const cKey = getSelectedHonorCourse();
+      const list = (getStageTop(activeStage)[cKey]) || emptyThree();
+      const activeHonor = list.filter((h) => h.name && h.name.trim()).length;
       document.getElementById("statActiveSubjects").textContent = `${activeSubj} / 12`;
+      document.getElementById("statJoinedCount").textContent = String(cachedJoins.length);
       document.getElementById("statAnnCount").textContent = String(cachedAnns.length);
-      document.getElementById("statDeptCount").textContent = String(cachedDepts.length);
       document.getElementById("statHonorCount").textContent = `${activeHonor} / 3`;
     }
 
@@ -886,20 +1661,29 @@
       el.innerHTML = cachedAnns.length ? cachedAnns.map((x) => `<div class="item"><div><div class="item-title">${escapeHtml(x.title)}</div><div>${escapeHtml(x.body)}</div></div>${isAdminUnlocked ? `<button class="danger" onclick="deleteDocItem('announcements','${x.id}')">${t.delete}</button>` : ""}</div>`).join("") : `<p class="muted">${t.empty}</p>`;
     }
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramStage = Number(urlParams.get("stage"));
+    if ([1, 2, 3, 4].includes(paramStage)) activeStage = paramStage;
+
     const sLang = localStorage.getItem("mycollege_lang"); if (sLang && i18n[sLang]) { currentLang = sLang; langSelect.value = sLang; }
     const sTheme = localStorage.getItem("mycollege_theme"); if (sTheme) setTheme(sTheme);
     const sScale = localStorage.getItem("mycollege_font_scale"); if (sScale) setFontScale(sScale);
     const sExamSched = localStorage.getItem("mycollege_exam_schedule"); if (sExamSched) document.getElementById("examScheduleText").value = sExamSched;
     const sSched = localStorage.getItem("mycollege_schedule"); if (sSched) document.getElementById("scheduleText").value = sSched;
     const sNotes = localStorage.getItem("mycollege_notes"); if (sNotes) document.getElementById("personalNotesText").value = sNotes;
-    try { const p = JSON.parse(localStorage.getItem("mycollege_student_profile")); if (p && p.name) { studentProfile = p; activeStage = Number(p.stage) || 1; document.getElementById("profNameInput").value = p.name; document.getElementById("profIdInput").value = p.studentId || ""; document.querySelectorAll(".stage-btn").forEach(b => b.classList.toggle("active", Number(b.dataset.stage) === activeStage)); } } catch (e) {}
-    try { const h = JSON.parse(localStorage.getItem("mycollege_honor_cache")); if (Array.isArray(h) && h.length === 3) honorData = h; } catch (e) {}
+    try { const p = JSON.parse(localStorage.getItem("mycollege_student_profile")); if (p && p.name) { studentProfile = p; if (![1,2,3,4].includes(paramStage)) activeStage = Number(p.stage) || 1; document.getElementById("profNameInput").value = p.name; document.getElementById("profIdInput").value = p.studentId || ""; } } catch (e) {}
+    try { const sl = JSON.parse(localStorage.getItem("mycollege_stage_links_map")); if (sl && typeof sl === "object") stageLinksMap = { ...stageLinksMap, ...sl }; } catch (e) {}
+    try { const l = JSON.parse(localStorage.getItem("mycollege_lectures_map")); if (l && typeof l === "object") lecturesMap = l; } catch (e) {}
+    try { const topM = JSON.parse(localStorage.getItem("mycollege_stage_top_map")); if (topM && typeof topM === "object") stageTopMap = { ...stageTopMap, ...topM }; } catch (e) {}
     try { const m = JSON.parse(localStorage.getItem("mycollege_stages_subjects")); if (m && typeof m === "object") stageSubjectsMap = { ...stageSubjectsMap, ...m }; } catch (e) {}
+
+    document.querySelectorAll(".stage-btn").forEach(b => b.classList.toggle("active", Number(b.dataset.stage) === activeStage));
 
     const manifestBlob = new Blob([JSON.stringify({ name: "MyCollege", short_name: "MyCollege", start_url: ".", display: "standalone", background_color: "#0b1120", theme_color: "#0f172a" })], { type: "application/json" });
     const manifestLink = document.createElement("link"); manifestLink.rel = "manifest"; manifestLink.href = URL.createObjectURL(manifestBlob); document.head.appendChild(manifestLink);
 
     applyLanguage();
+    if (urlParams.get("live") === "1") switchToTab("roomTab");
   </script>
 </body>
 </html>
