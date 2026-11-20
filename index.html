@@ -14,14 +14,12 @@
     * { box-sizing:border-box; margin:0; padding:0; font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif; }
     body { background:var(--bg); color:var(--text); min-height:100vh; line-height:1.65; font-size:calc(16px * var(--font-scale)); transition:background .25s,color .25s; }
     header { background:color-mix(in srgb,var(--card) 92%,transparent); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:14px 20px; position:sticky; top:0; z-index:30; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
-    .brand-wrap { display:flex; flex-direction:column; gap:2px; }
     .brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:1.15em; color:var(--accent); }
-    .brand-sub { font-size:.82em; color:var(--muted); }
     .controls, .nav-tabs, .row, .links-group { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
     select, input, textarea, button { background:var(--card-2); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:9px 12px; font-size:.92em; outline:none; }
     select:focus, input:focus, textarea:focus { border-color:var(--accent); }
     button { cursor:pointer; font-weight:600; transition:.2s; }
-    button.primary, .tab-btn.active { background:var(--accent); color:#061220; border:none; }
+    button.primary, .tab-btn.active, .stage-btn.active, .course-btn.active { background:var(--accent); color:#061220; border:none; }
     button.success { background:var(--accent-2); color:#051b0d; border:none; }
     button.gold { background:var(--gold); color:#1a1203; border:none; }
     button.danger { background:var(--danger); color:#fff; border:none; }
@@ -33,11 +31,14 @@
     .badge.live { background:rgba(34,197,94,0.18); color:var(--accent-2); }
     .grid-2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(310px,1fr)); gap:18px; }
     .grid-3 { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:16px; }
+    .grid-4 { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
     .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
-    .stat-box, .admin-subject-box, .top-student-card { background:var(--card-2); border:1px solid var(--border); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px; }
+    .stat-box, .admin-subject-box, .top-student-card, .stage-banner, .profile-box { background:var(--card-2); border:1px solid var(--border); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px; }
     .stat-num { font-size:1.35em; font-weight:800; color:var(--accent); }
     .card, .subject-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:12px; }
     .super-card { border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border)); box-shadow:0 12px 30px rgba(0,0,0,0.18); }
+    .dept-choice { padding:16px; border-radius:14px; border:1px solid var(--border); background:var(--card-2); text-align:start; display:flex; flex-direction:column; gap:4px; }
+    .dept-choice.active { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
     .card h2, .card h3, .card h4 { color:var(--accent); }
     .muted { color:var(--muted); font-size:.88em; }
     .item { background:var(--card-2); border:1px solid var(--border); border-radius:12px; padding:12px 14px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
@@ -57,10 +58,7 @@
 </head>
 <body>
   <header>
-    <div class="brand-wrap">
-      <div class="brand"><span>🎓</span><span id="appTitle">MyCollege</span></div>
-      <div class="brand-sub" id="headerMetaInfo">Live Firestore Sync</div>
-    </div>
+    <div class="brand"><span>🎓</span><span id="appTitle">MyCollege</span></div>
     <div class="controls">
       <select id="langSelect" aria-label="Language">
         <option value="ku">کوردی (بادینی)</option>
@@ -81,12 +79,16 @@
   <main class="container">
     <div class="status-bar">
       <div><strong id="activeRoleLabel">دۆخێ نووکە: قوتابی (Student)</strong><span class="muted"> — Project: mycollege-b8a6c</span></div>
-      <span id="syncStatus" class="badge live">Live Firestore Connected</span>
+      <div class="row">
+        <span class="badge" id="studentHeaderBadge">👤 Guest</span>
+        <span id="syncStatus" class="badge live">Live Firestore Connected</span>
+      </div>
     </div>
 
     <div class="nav-tabs">
-      <button class="tab-btn active" data-tab="subjectsTab" id="tabSubjectsBtn">٦ مادەیێن بەشی و یەکەمین قۆناغێ</button>
+      <button class="tab-btn active" data-tab="subjectsTab" id="tabSubjectsBtn">بەش و قۆناغ (١٢ مادە)</button>
       <button class="tab-btn" data-tab="toolsTab" id="tabToolsBtn">ئامرازێن کۆلیژێ (College Tools)</button>
+      <button class="tab-btn" data-tab="profileTab" id="tabProfileBtn">My Profile (👤)</button>
       <button class="tab-btn" data-tab="settingsTab" id="tabSettingsBtn">ڕێکخستنان (⚙️ Settings)</button>
     </div>
 
@@ -94,25 +96,16 @@
       <div class="row" style="justify-content:space-between;">
         <div>
           <h2 id="adminPanelTitle">پانێلا تایبەتا ڕێڤەبرنێ (Super Admin & Dept Admin)</h2>
-          <p class="muted" id="adminPanelDesc">کۆنترۆڵا تەماما ٦ مادەیان، ٣ یەکەمێن قۆناغێ، زانیاریێن سەرپەرشتیار، و ئاگادارییان.</p>
+          <p class="muted" id="adminPanelDesc">کۆنترۆڵا تەماما ١٢ مادەیێن قۆناغا هەلبژارتی، ٢ کۆرسان، ٣ یەکەمێن قۆناغێ، و ئاگادارییان.</p>
         </div>
         <span class="badge" id="adminRoleBadge">Admin Unlocked</span>
       </div>
 
       <div class="stats-grid">
-        <div class="stat-box"><span class="muted" id="statSubLabel">مادەیێن چالاک</span><span class="stat-num" id="statActiveSubjects">0 / 6</span></div>
+        <div class="stat-box"><span class="muted" id="statSubLabel">مادەیێن ڤێ قۆناغێ</span><span class="stat-num" id="statActiveSubjects">0 / 12</span></div>
         <div class="stat-box"><span class="muted" id="statAnnLabel">ئاگاداریێن بڵاڤکری</span><span class="stat-num" id="statAnnCount">0</span></div>
-        <div class="stat-box"><span class="muted" id="statDeptLabel">تێبینی و بەش</span><span class="stat-num" id="statDeptCount">0</span></div>
+        <div class="stat-box"><span class="muted" id="statDeptLabel">بەش و تێبینی</span><span class="stat-num" id="statDeptCount">0</span></div>
         <div class="stat-box"><span class="muted" id="statHonorLabel">یەکەمێن تۆمارکری</span><span class="stat-num" id="statHonorCount">0 / 3</span></div>
-      </div>
-
-      <div class="card" style="background:var(--card-2);">
-        <h3 id="metaInfoTitle">زانیاریێن سەرپەرشتیار و قۆناغێ</h3>
-        <div class="grid-2">
-          <input type="text" id="supervisorNameInput" placeholder="ناڤێ سەرپەرشتیار یان بەرپرسی" />
-          <input type="text" id="stageLabelInput" placeholder="ناڤێ قۆناغ یان بەشی" />
-        </div>
-        <div class="row"><button id="saveMetaBtn" class="primary">هەڵگرتنا زانیاریێن سەرپەرشتیاری</button></div>
       </div>
 
       <div class="card" style="background:var(--card-2);">
@@ -122,9 +115,9 @@
         <div class="row"><button id="saveHonorBtn" class="gold">تۆمارکرنا ٣ یەکەمێن قۆناغێ</button></div>
       </div>
 
-      <h3 id="sixSubjectsAdminTitle">رێکخستنا ٦ مادەیان (PDF & وێنە / تەسویر)</h3>
+      <h3 id="twelveSubjectsAdminTitle">رێکخستنا ١٢ مادەیێن قۆناغا هەلبژارتی (PDF & وێنە / تەسویر)</h3>
       <div id="adminSubjectsGrid" class="grid-3"></div>
-      <div class="row"><button id="saveAllSubjectsBtn" class="success">تۆمارکرنا هەمی ٦ مادەیان</button></div>
+      <div class="row"><button id="saveAllSubjectsBtn" class="success">تۆمارکرنا هەمی ١٢ مادەیان</button></div>
 
       <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;" />
 
@@ -146,15 +139,43 @@
 
     <div id="subjectsTab" class="tab-content">
       <div class="card" style="margin-bottom:18px;">
-        <h2 id="honorPublicTitle">🌟 ٣ یەکەمێن قۆناغێ و پشتگیرییا قوتابیێن زیرەک</h2>
-        <p class="muted" id="honorPublicSub">پێزانین و هاندان بۆ قوتابیێن زیرەک و بەردەوام د خواندنێ دا.</p>
-        <div id="honorDisplayGrid" class="grid-3"></div>
+        <h2 id="selectDeptTitle">بەشێن کۆلیژێ</h2>
+        <div class="grid-2">
+          <button class="dept-choice active" id="deptStatBtn" onclick="selectDepartment('statistics')">
+            <strong id="statDeptName">Statistics (ئامار)</strong>
+            <span class="muted" id="statDeptDesc">٤ قۆناغ • ٢ کۆرس • ١٢ مادە بۆ هەر قۆناغەکێ</span>
+          </button>
+        </div>
       </div>
 
       <div class="card" style="margin-bottom:18px;">
-        <h2 id="sixSubjectsTitle">٦ مادەیێن بەشی (PDF & وێنە / تەسویر)</h2>
-        <p class="muted" id="sixSubjectsSub">هەر مادەیەکێ فایلێن PDF و وێنەیێن خۆ ب جودا هەنە.</p>
+        <h3 id="selectStageTitle">قۆناغێ هەلبژێرە</h3>
+        <div class="grid-4">
+          <button class="stage-btn active" data-stage="1" id="stageBtn1">قۆناغا ١</button>
+          <button class="stage-btn" data-stage="2" id="stageBtn2">قۆناغا ٢</button>
+          <button class="stage-btn" data-stage="3" id="stageBtn3">قۆناغا ٣</button>
+          <button class="stage-btn" data-stage="4" id="stageBtn4">قۆناغا ٤</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <div class="stage-banner">
+          <h2 id="activeStageHeading">Statistics — قۆناغا ١</h2>
+          <p class="muted" id="activeStageSubjectsList"></p>
+          <div class="row">
+            <button class="course-btn active" data-course="all" id="courseAllBtn">هەمی مادە (١٢)</button>
+            <button class="course-btn" data-course="c1" id="course1Btn">کۆرسێ ١ (نیڤا ساڵێ)</button>
+            <button class="course-btn" data-course="c2" id="course2Btn">کۆرسێ ٢ (سەرێ ساڵێ)</button>
+          </div>
+          <input type="search" id="subjectSearchInput" placeholder="گەڕان د ناڤ مادەیان دا..." />
+        </div>
         <div id="subjectsDisplayGrid" class="grid-3"></div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <h2 id="honorPublicTitle">🌟 ٣ یەکەمێن قۆناغێ و پشتگیرییا قوتابیێن زیرەک</h2>
+        <p class="muted" id="honorPublicSub">پێزانین و هاندان بۆ قوتابیێن زیرەک و بەردەوام د خواندنێ دا.</p>
+        <div id="honorDisplayGrid" class="grid-3"></div>
       </div>
 
       <section class="grid-2">
@@ -166,12 +187,21 @@
     <div id="toolsTab" class="tab-content hidden">
       <div class="grid-2">
         <div class="card">
-          <h3 id="gpaTitle">هەژمارکەرێ تێکڕایێ ٦ مادەیان (Average / GPA)</h3>
-          <p class="muted" id="gpaDesc">نمرەیێن خۆ یێن ٦ مادەیان (ژ ١٠٠) بنڤیسە:</p>
+          <h3 id="gpaTitle">هەژمارکەرێ تێکڕایێ ١٢ مادەیان (Average / GPA)</h3>
+          <p class="muted" id="gpaDesc">نمرەیێن خۆ یێن ڤێ قۆناغێ (ژ ١٠٠) بنڤیسە:</p>
           <div id="gpaInputsGrid" class="grid-3"></div>
           <button id="calcGpaBtn" class="primary">هەژمارتنا تێکڕایێ</button>
           <div id="gpaOutput" class="gpa-result muted">تێکڕا: —</div>
         </div>
+
+        <div class="card">
+          <h3 id="statsToolTitle">هەژمارکەرێ ب لەز یێ ئامارێ (Mean / Variance / SD)</h3>
+          <p class="muted" id="statsToolDesc">ژمارەیان ب کۆما یان بۆشایی بنڤیسە (نموونە: 12, 15, 18, 20):</p>
+          <input type="text" id="statsNumbersInput" placeholder="10, 20, 30, 40" />
+          <button id="calcStatsBtn" class="success">هەژمارتنا ئاماری</button>
+          <div id="statsOutput" class="gpa-result muted">—</div>
+        </div>
+
         <div class="card">
           <h3 id="countdownTitle">ژمێرەرێ دەمێ تاقیکرنێ (Exam Countdown)</h3>
           <p class="muted" id="countdownDesc">رۆژا تاقیکرنێ هەلبژێرە:</p>
@@ -179,17 +209,54 @@
           <button id="calcCountdownBtn" class="gold">پشکنینا ڕۆژێن ماین</button>
           <div id="countdownOutput" class="gpa-result muted">هیشتا رۆژەک نەهاتییە هەلبژارتن.</div>
         </div>
+
+        <div class="card">
+          <h3 id="examSchedTitle">خشتەیێ تاقیکرنان (Exam Schedule)</h3>
+          <p class="muted" id="examSchedDesc">رۆژ، دەم، و هۆلا تاقیکرنان بنڤیسە:</p>
+          <textarea id="examScheduleText" rows="4"></textarea>
+          <button id="saveExamSchedBtn" class="gold">هەڵگرتنا خشتەیێ تاقیکرنان</button>
+        </div>
+
         <div class="card">
           <h3 id="scheduleTitle">خشتەیێ وانەیێن هەفتانە (Weekly Schedule)</h3>
           <p class="muted" id="scheduleDesc">خشتەیێ خۆ یێ هەفتانە بنڤیسە:</p>
-          <textarea id="scheduleText" rows="5"></textarea>
+          <textarea id="scheduleText" rows="4"></textarea>
           <button id="saveScheduleBtn" class="success">هەڵگرتنا خشتەی</button>
         </div>
+
         <div class="card">
           <h3 id="notesTitle">تێبینییێن تایبەت (My Notes)</h3>
           <p class="muted" id="notesDesc">تێبینییێن خۆ یێن خواندنێ ل ڤێرە بنڤیسە:</p>
-          <textarea id="personalNotesText" rows="5"></textarea>
+          <textarea id="personalNotesText" rows="4"></textarea>
           <button id="saveNotesBtn" class="primary">هەڵگرتنا تێبینییان</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="profileTab" class="tab-content hidden">
+      <div class="grid-2">
+        <div class="card">
+          <h3 id="profileJoinTitle">👤 My Profile — چوونا ژوورێ (Student Join)</h3>
+          <p class="muted" id="profileJoinDesc">ناڤ و زانیاریێن خۆ یێن قوتابییێ بنڤیسە دا ب پرۆفایلێ خۆ بچییە ژوورێ:</p>
+          <input type="text" id="profNameInput" placeholder="ناڤێ تە یێ تەمام" />
+          <select id="profStageSelect">
+            <option value="1">قۆناغا ١</option>
+            <option value="2">قۆناغا ٢</option>
+            <option value="3">قۆناغا ٣</option>
+            <option value="4">قۆناغا ٤</option>
+          </select>
+          <input type="text" id="profIdInput" placeholder="کۆدێ قوتابییێ یان ئیمەیل" />
+          <div class="row">
+            <button id="studentJoinBtn" class="success">Join (چوونە ژوورێ قوتابی)</button>
+            <button id="studentLogoutBtn" class="danger hidden">Logout (دەرچوون)</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 id="profileCardTitle">زانیاریێن پرۆفایلێ قوتابی</h3>
+          <div id="studentProfileCard" class="profile-box">
+            <span class="muted" id="profileEmptyMsg">هیشتا چ قوتابییەک نەهاتییە ژوورێ.</span>
+          </div>
         </div>
       </div>
     </div>
@@ -197,8 +264,8 @@
     <div id="settingsTab" class="tab-content hidden">
       <div class="grid-2">
         <div class="card">
-          <h3 id="themeSettingTitle">ڕەنگ و شێوازێ شاشەی (Theme & Colors)</h3>
-          <p class="muted" id="themeSettingDesc">رەنگێ گونجای بۆ چاڤێ خۆ هەلبژێرە:</p>
+          <h3 id="themeSettingTitle">ڕەنگ و شێوازێ شاشەی (Theme)</h3>
+          <p class="muted" id="themeSettingDesc">رەنگێ گونجای هەلبژێرە:</p>
           <div class="row">
             <button class="ghost" id="btnThemeDark" onclick="setTheme('dark')">Midnight Blue</button>
             <button class="ghost" id="btnThemeLight" onclick="setTheme('light')">Clean Light</button>
@@ -233,91 +300,175 @@
     const SUPER_ADMIN_PIN = "8564";
     const DEPT_ADMIN_PIN = "4343";
 
+    const DEFAULT_STAGE_SUBJECTS = {
+      1: [
+        {index:1,course:"c1",name:"Principles of Statistics",pdfUrl:"",imageUrl:""},
+        {index:2,course:"c1",name:"Mathematics I",pdfUrl:"",imageUrl:""},
+        {index:3,course:"c1",name:"Introduction to Computer",pdfUrl:"",imageUrl:""},
+        {index:4,course:"c1",name:"English Language I",pdfUrl:"",imageUrl:""},
+        {index:5,course:"c1",name:"Kurdish / Arabic",pdfUrl:"",imageUrl:""},
+        {index:6,course:"c1",name:"Probability Concepts",pdfUrl:"",imageUrl:""},
+        {index:7,course:"c2",name:"Descriptive Statistics",pdfUrl:"",imageUrl:""},
+        {index:8,course:"c2",name:"Mathematics II",pdfUrl:"",imageUrl:""},
+        {index:9,course:"c2",name:"Programming Basics",pdfUrl:"",imageUrl:""},
+        {index:10,course:"c2",name:"English Language II",pdfUrl:"",imageUrl:""},
+        {index:11,course:"c2",name:"Data Collection Methods",pdfUrl:"",imageUrl:""},
+        {index:12,course:"c2",name:"Academic Skills",pdfUrl:"",imageUrl:""}
+      ],
+      2: [
+        {index:1,course:"c1",name:"Probability Theory I",pdfUrl:"",imageUrl:""},
+        {index:2,course:"c1",name:"Linear Algebra",pdfUrl:"",imageUrl:""},
+        {index:3,course:"c1",name:"Statistical Packages (R / SPSS)",pdfUrl:"",imageUrl:""},
+        {index:4,course:"c1",name:"Calculus III",pdfUrl:"",imageUrl:""},
+        {index:5,course:"c1",name:"Demographic Statistics",pdfUrl:"",imageUrl:""},
+        {index:6,course:"c1",name:"Database Basics",pdfUrl:"",imageUrl:""},
+        {index:7,course:"c2",name:"Probability Theory II",pdfUrl:"",imageUrl:""},
+        {index:8,course:"c2",name:"Sampling Theory",pdfUrl:"",imageUrl:""},
+        {index:9,course:"c2",name:"Statistical Data Analysis",pdfUrl:"",imageUrl:""},
+        {index:10,course:"c2",name:"Numerical Methods",pdfUrl:"",imageUrl:""},
+        {index:11,course:"c2",name:"Official Statistics",pdfUrl:"",imageUrl:""},
+        {index:12,course:"c2",name:"Research Methodology",pdfUrl:"",imageUrl:""}
+      ],
+      3: [
+        {index:1,course:"c1",name:"Statistical Inference I",pdfUrl:"",imageUrl:""},
+        {index:2,course:"c1",name:"Regression Analysis",pdfUrl:"",imageUrl:""},
+        {index:3,course:"c1",name:"Design of Experiments",pdfUrl:"",imageUrl:""},
+        {index:4,course:"c1",name:"Time Series Analysis I",pdfUrl:"",imageUrl:""},
+        {index:5,course:"c1",name:"Biostatistics",pdfUrl:"",imageUrl:""},
+        {index:6,course:"c1",name:"Applied Computing",pdfUrl:"",imageUrl:""},
+        {index:7,course:"c2",name:"Statistical Inference II",pdfUrl:"",imageUrl:""},
+        {index:8,course:"c2",name:"Multivariate Analysis",pdfUrl:"",imageUrl:""},
+        {index:9,course:"c2",name:"Nonparametric Statistics",pdfUrl:"",imageUrl:""},
+        {index:10,course:"c2",name:"Time Series Analysis II",pdfUrl:"",imageUrl:""},
+        {index:11,course:"c2",name:"Quality Control Statistics",pdfUrl:"",imageUrl:""},
+        {index:12,course:"c2",name:"Econometric Basics",pdfUrl:"",imageUrl:""}
+      ],
+      4: [
+        {index:1,course:"c1",name:"Stochastic Processes",pdfUrl:"",imageUrl:""},
+        {index:2,course:"c1",name:"Bayesian Statistics",pdfUrl:"",imageUrl:""},
+        {index:3,course:"c1",name:"Operations Research",pdfUrl:"",imageUrl:""},
+        {index:4,course:"c1",name:"Survival Analysis",pdfUrl:"",imageUrl:""},
+        {index:5,course:"c1",name:"Machine Learning for Stats",pdfUrl:"",imageUrl:""},
+        {index:6,course:"c1",name:"Graduation Project I",pdfUrl:"",imageUrl:""},
+        {index:7,course:"c2",name:"Advanced Multivariate Methods",pdfUrl:"",imageUrl:""},
+        {index:8,course:"c2",name:"Simulation & Modeling",pdfUrl:"",imageUrl:""},
+        {index:9,course:"c2",name:"Actuarial Statistics",pdfUrl:"",imageUrl:""},
+        {index:10,course:"c2",name:"Big Data Analytics",pdfUrl:"",imageUrl:""},
+        {index:11,course:"c2",name:"Applied Decision Analysis",pdfUrl:"",imageUrl:""},
+        {index:12,course:"c2",name:"Graduation Project II",pdfUrl:"",imageUrl:""}
+      ]
+    };
+
     const i18n = {
       ku: {
         dir:"rtl", title:"MyCollege", student:"قوتابی (Student)", deptAdmin:"ئەدمینێ بەشێ (Department Admin)", superAdmin:"سوپەر ئەدمین (Super Admin)",
         pinPlaceholder:"کۆدێ PIN", unlock:"چوونە ژوور", logout:"دەرچوون", statusPrefix:"دۆخێ نووکە:",
-        tabSubjects:"٦ مادەیێن بەشی و یەکەمین قۆناغێ", tabTools:"ئامرازێن کۆلیژێ (College Tools)", tabSettings:"ڕێکخستنان (⚙️ Settings)",
-        adminTitle:"پانێلا تایبەتا ڕێڤەبرنێ (Super Admin & Dept Admin)", adminDesc:"کۆنترۆڵا تەماما ٦ مادەیان، ٣ یەکەمێن قۆناغێ، زانیاریێن سەرپەرشتیار، و ئاگادارییان.",
-        statSubLabel:"مادەیێن چالاک", statAnnLabel:"ئاگاداریێن بڵاڤکری", statDeptLabel:"تێبینی و بەش", statHonorLabel:"یەکەمێن تۆمارکری",
-        metaTitle:"زانیاریێن سەرپەرشتیار و قۆناغێ", supervisorPh:"ناڤێ سەرپەرشتیار یان بەرپرسی", stagePh:"ناڤێ قۆناغ یان بەشی", saveMeta:"هەڵگرتنا زانیاریێن سەرپەرشتیاری",
+        tabSubjects:"بەش و قۆناغ (١٢ مادە)", tabTools:"ئامرازێن کۆلیژێ", tabProfile:"My Profile (👤)", tabSettings:"ڕێکخستنان (⚙️)",
+        adminTitle:"پانێلا تایبەتا ڕێڤەبرنێ", adminDesc:"کۆنترۆڵا تەماما ١٢ مادەیێن قۆناغا هەلبژارتی، ٢ کۆرسان، ٣ یەکەمێن قۆناغێ، و ئاگادارییان.",
+        statSubLabel:"مادەیێن ڤێ قۆناغێ", statAnnLabel:"ئاگاداریێن بڵاڤکری", statDeptLabel:"بەش و تێبینی", statHonorLabel:"یەکەمێن تۆمارکری",
+        selectDeptTitle:"بەشێن کۆلیژێ", statDeptName:"Statistics (ئامار)", statDeptDesc:"٤ قۆناغ • ٢ کۆرس • ١٢ مادە بۆ هەر قۆناغەکێ",
+        selectStageTitle:"قۆناغێ هەلبژێرە", stageNames:{ 1:"قۆناغا ١", 2:"قۆناغا ٢", 3:"قۆناغا ٣", 4:"قۆناغا ٤" },
+        courseAll:"هەمی مادە (١٢)", course1:"کۆرسێ ١ (نیڤا ساڵێ)", course2:"کۆرسێ ٢ (سەرێ ساڵێ)",
+        searchPh:"گەڕان د ناڤ مادەیان دا...", noMatch:"هیچ مادەیەک نەهاتە دیتن.",
         honorAdminTitle:"پشتگیرییا قوتابیێن زیرەک (٣ یەکەمێن قۆناغێ)", honorAdminDesc:"ناڤێ ٣ قوتابیێن یەکەم، تێکڕا، و پەیاما پشتگیریێ بنڤیسە:", saveHonor:"تۆمارکرنا ٣ یەکەمێن قۆناغێ",
         honorPublicTitle:"🌟 ٣ یەکەمێن قۆناغێ و پشتگیرییا قوتابیێن زیرەک", honorPublicSub:"پێزانین و هاندان بۆ قوتابیێن زیرەک و بەردەوام د خواندنێ دا.",
         rankPrefix:"پلەیا", studentNamePh:"ناڤێ قوتابیێ زیرەک", scorePh:"تێکڕا یان پۆینت", supportMsgPh:"پەیاما پشتگیریێ...", noHonorEntry:"هیشتا ناڤێ قوتابی نەهاتییە تۆمارکرن.",
-        sixSubjectsAdminTitle:"رێکخستنا ٦ مادەیان (PDF & وێنە / تەسویر)", saveAllSubjects:"تۆمارکرنا هەمی ٦ مادەیان",
+        twelveSubjectsAdminTitle:"رێکخستنا ١٢ مادەیێن قۆناغا هەلبژارتی (PDF & وێنە)", saveAllSubjects:"تۆمارکرنا هەمی ١٢ مادەیان",
         addDept:"زێدەکرنا بەش یان تێبینییەکا گشتی", deptNamePh:"ناڤێ بەشی یان تێبینییێ", deptCodePh:"قۆناغ یان کۆد", save:"تۆمارکرن",
         addAnn:"بڵاڤکرنا ئاگادارییەکا نوو", annTitlePh:"سەردێڕێ ئاگادارییێ", annBodyPh:"ناڤەرۆکا ئاگادارییێ بنڤیسە...", publish:"بڵاڤکرن",
-        sixSubjectsTitle:"٦ مادەیێن بەشی (PDF & وێنە / تەسویر)", sixSubjectsSub:"هەر مادەیەکێ فایلێن PDF و وێنەیێن خۆ ب جودا هەنە.",
         deptList:"بەش و زانیاریێن تۆمارکری", annList:"ئاگاداریێن کۆلێژێ", delete:"ژێبرن", wrongPin:"کۆدێ PIN یێ خەڵەتە!", fillFields:"هیڤیە خانەیان پر بکە.", empty:"هیشتا چ داتا نەهاتینە تۆمارکرن.",
         subjectPrefix:"مادەیێ", subjectNamePh:"ناڤێ مادەیێ", pdfLinkPh:"لینکێ PDF", imgLinkPh:"لینکێ وێنەی", openPdf:"ڤەکرنا PDF", openImg:"بینینا وێنەی", noPdf:"PDF نینە", noImg:"وێنە نینە",
-        savedSubjects:"هەمی ٦ مادە هاتنە تۆمارکرن!", savedHonor:"٣ یەکەمێن قۆناغێ هاتنە تۆمارکرن!", savedMeta:"زانیاریێن سەرپەرشتیاری هاتنە هەڵگرتن!",
-        gpaTitle:"هەژمارکەرێ تێکڕایێ ٦ مادەیان (Average / GPA)", gpaDesc:"نمرەیێن خۆ یێن ٦ مادەیان (ژ ١٠٠) بنڤیسە:", calcGpaBtn:"هەژمارتنا تێکڕایێ",
-        gpaDefault:"تێکڕا: —", gpaNoGrades:"هیچ نمرەیەک نەهاتییە نڤیسین.", gpaAvgText:(a,c)=>`تێکڕا: ${a}% (${c}/6 مادە)`,
-        countdownTitle:"ژمێرەرێ دەمێ تاقیکرنێ (Exam Countdown)", countdownDesc:"رۆژا تاقیکرنێ هەلبژێرە:", calcCountdownBtn:"پشکنینا ڕۆژێن ماین",
+        savedSubjects:"هەمی ١٢ مادە هاتنە تۆمارکرن!", savedHonor:"٣ یەکەمێن قۆناغێ هاتنە تۆمارکرن!",
+        gpaTitle:"هەژمارکەرێ تێکڕایێ ١٢ مادەیان", gpaDesc:"نمرەیێن خۆ یێن ڤێ قۆناغێ (ژ ١٠٠) بنڤیسە:", calcGpaBtn:"هەژمارتنا تێکڕایێ",
+        gpaDefault:"تێکڕا: —", gpaNoGrades:"هیچ نمرەیەک نەهاتییە نڤیسین.", gpaAvgText:(a,c)=>`تێکڕا: ${a}% (${c}/12 مادە)`,
+        statsToolTitle:"هەژمارکەرێ ب لەز یێ ئامارێ (Mean / Variance / SD)", statsToolDesc:"ژمارەیان ب کۆما یان بۆشایی بنڤیسە:", calcStatsBtn:"هەژمارتنا ئاماری",
+        statsEmpty:"هیڤیە ژمارەیان بنڤیسە.", statsResult:(m,v,sd,n)=>`Mean: ${m} | Variance: ${v} | SD: ${sd} (n=${n})`,
+        countdownTitle:"ژمێرەرێ دەمێ تاقیکرنێ", countdownDesc:"رۆژا تاقیکرنێ هەلبژێرە:", calcCountdownBtn:"پشکنینا ڕۆژێن ماین",
         countdownDefault:"هیشتا رۆژەک نەهاتییە هەلبژارتن.", countdownPickDate:"هیڤیە رۆژەکێ هەلبژێرە.", countdownDaysLeft:(d)=>`${d} ڕۆژ ماینە بۆ تاقیکرنێ.`, countdownToday:"ئەڤرۆ رۆژا تاقیکرنێ یە!", countdownPassed:"ئەڤ مێژووە بوورییە.",
-        scheduleTitle:"خشتەیێ وانەیێن هەفتانە", scheduleDesc:"خشتەیێ خۆ یێ هەفتانە بنڤیسە:", schedulePh:"ئێکشەممە: ...\nدووشەممە: ...", saveScheduleBtn:"هەڵگرتنا خشتەی", scheduleSaved:"خشتە هاتە هەڵگرتن.",
-        notesTitle:"تێبینییێن تایبەت (My Notes)", notesDesc:"تێبینییێن خۆ بنڤیسە:", notesPh:"تێبینییێن خۆ ل ڤێرە بنڤیسە...", saveNotesBtn:"هەڵگرتنا تێبینییان", notesSaved:"تێبینییێن تە هاتنە هەڵگرتن.",
-        themeSettingTitle:"ڕەنگ و شێوازێ شاشەی (Theme)", themeSettingDesc:"رەنگێ گونجای هەلبژێرە:", themeDark:"شینی شەڤێ (Midnight Blue)", themeLight:"ڕۆناهیا پاقژ (Clean Light)", themeGold:"زێڕین و تاری (Royal Gold)",
-        fontSettingTitle:"قەبارەیێ نڤیسینێ (Font Size)", fontSettingDesc:"قەبارەیێ نڤیسینێ ب گونجێنە:", fontSmall:"بچووک (Small)", fontNormal:"ئاسایی (Normal)", fontLarge:"مەزن (Large)"
+        examSchedTitle:"خشتەیێ تاقیکرنان (Exam Schedule)", examSchedDesc:"رۆژ، دەم، و هۆلا تاقیکرنان بنڤیسە:", saveExamSchedBtn:"هەڵگرتنا خشتەیێ تاقیکرنان",
+        scheduleTitle:"خشتەیێ وانەیێن هەفتانە", scheduleDesc:"خشتەیێ خۆ یێ هەفتانە بنڤیسە:", saveScheduleBtn:"هەڵگرتنا خشتەی", scheduleSaved:"هاتە هەڵگرتن.",
+        notesTitle:"تێبینییێن تایبەت (My Notes)", notesDesc:"تێبینییێن خۆ بنڤیسە:", saveNotesBtn:"هەڵگرتنا تێبینییان",
+        profileJoinTitle:"👤 My Profile — چوونا ژوورێ (Student Join)", profileJoinDesc:"ناڤ و زانیاریێن خۆ یێن قوتابییێ بنڤیسە دا ب پرۆفایلێ خۆ بچییە ژوورێ:",
+        profNamePh:"ناڤێ تە یێ تەمام", profIdPh:"کۆدێ قوتابییێ یان ئیمەیل", joinBtn:"Join (چوونە ژوورێ قوتابی)", logoutProfBtn:"Logout (دەرچوون)",
+        profileCardTitle:"زانیاریێن پرۆفایلێ قوتابی", profileEmpty:"هیشتا چ قوتابییەک نەهاتییە ژوورێ.", enterNameFirst:"هیڤیە ناڤێ خۆ بنڤیسە.",
+        themeSettingTitle:"ڕەنگ و شێوازێ شاشەی", themeSettingDesc:"رەنگێ گونجای هەلبژێرە:", themeDark:"Midnight Blue", themeLight:"Clean Light", themeGold:"Royal Gold & Dark",
+        fontSettingTitle:"قەبارەیێ نڤیسینێ", fontSettingDesc:"قەبارەیێ نڤیسینێ ب گونجێنە:", fontSmall:"بچووک (Small)", fontNormal:"ئاسایی (Normal)", fontLarge:"مەزن (Large)"
       },
       ar: {
         dir:"rtl", title:"MyCollege", student:"طالب (Student)", deptAdmin:"مسؤول القسم (Department Admin)", superAdmin:"المدير العام (Super Admin)",
         pinPlaceholder:"رمز PIN", unlock:"دخول", logout:"خروج", statusPrefix:"الحالة الحالية:",
-        tabSubjects:"المواد الـ 6 وأوائل المرحلة", tabTools:"أدوات الكلية (College Tools)", tabSettings:"الإعدادات (⚙️ Settings)",
-        adminTitle:"لوحة الإدارة المتقدمة (Super Admin & Dept Admin)", adminDesc:"تحكم كامل بالمواد الـ 6، أوائل المرحلة، بيانات المشرف، والإعلانات.",
-        statSubLabel:"المواد النشطة", statAnnLabel:"الإعلانات المنشورة", statDeptLabel:"الأقسام والملاحظات", statHonorLabel:"الأوائل المسجلون",
-        metaTitle:"بيانات المشرف والمرحلة", supervisorPh:"اسم المشرف أو المسؤول", stagePh:"اسم المرحلة أو القسم", saveMeta:"حفظ بيانات المشرف",
+        tabSubjects:"الأقسام والمراحل (12 مادة)", tabTools:"أدوات الكلية", tabProfile:"My Profile (👤)", tabSettings:"الإعدادات (⚙️)",
+        adminTitle:"لوحة الإدارة المتقدمة", adminDesc:"تحكم كامل بـ 12 مادة للمرحلة المختارة، كورسـين، أوائل المرحلة، والإعلانات.",
+        statSubLabel:"مواد المرحلة", statAnnLabel:"الإعلانات المنشورة", statDeptLabel:"الأقسام والملاحظات", statHonorLabel:"الأوائل المسجلون",
+        selectDeptTitle:"أقسام الكلية", statDeptName:"Statistics (الإحصاء)", statDeptDesc:"4 مراحل • كورسـان • 12 مادة لكل مرحلة",
+        selectStageTitle:"اختر المرحلة", stageNames:{ 1:"المرحلة 1", 2:"المرحلة 2", 3:"المرحلة 3", 4:"المرحلة 4" },
+        courseAll:"كل المواد (12)", course1:"الكورس 1 (نصف السنة)", course2:"الكورس 2 (نهاية السنة)",
+        searchPh:"ابحث في المواد...", noMatch:"لم يتم العثور على مادة مطابقة.",
         honorAdminTitle:"دعم الطلاب المتفوقين (أوائل المرحلة الـ 3)", honorAdminDesc:"أدخل أسماء الطلاب الـ 3 المتفوقين، المعدل، ورسالة الدعم:", saveHonor:"حفظ أوائل المرحلة الـ 3",
         honorPublicTitle:"🌟 أوائل المرحلة ودعم الطلاب المتفوقين", honorPublicSub:"تكريم وتحفيز للطلبة المتميزين في مسيرتهم الدراسية.",
         rankPrefix:"المركز", studentNamePh:"اسم الطالب المتفوق", scorePh:"المعدل أو التقدير", supportMsgPh:"رسالة دعم أو تهنئة...", noHonorEntry:"لم يتم تسجيل اسم طالب بعد.",
-        sixSubjectsAdminTitle:"إدارة المواد الـ 6 (PDF & صور)", saveAllSubjects:"حفظ جميع المواد الـ 6",
+        twelveSubjectsAdminTitle:"إدارة 12 مادة للمرحلة المختارة (PDF & صور)", saveAllSubjects:"حفظ جميع الـ 12 مادة",
         addDept:"إضافة قسم أو ملاحظة عامة", deptNamePh:"اسم القسم أو الملاحظة", deptCodePh:"المرحلة أو الرمز", save:"حفظ",
         addAnn:"نشر إعلان جديد", annTitlePh:"عنوان الإعلان", annBodyPh:"اكتب نص الإعلان...", publish:"نشر",
-        sixSubjectsTitle:"المواد الـ 6 للقسم (PDF & صور)", sixSubjectsSub:"كل مادة تحتوي على ملفات PDF وصور خاصة بها.",
         deptList:"الأقسام والمعلومات المسجلة", annList:"إعلانات الكلية", delete:"حذف", wrongPin:"رمز PIN غير صحيح!", fillFields:"يرجى ملء الحقول المطلوبة.", empty:"لا توجد بيانات مسجلة حتى الآن.",
         subjectPrefix:"المادة", subjectNamePh:"اسم المادة", pdfLinkPh:"رابط PDF", imgLinkPh:"رابط الصورة", openPdf:"فتح PDF", openImg:"عرض الصورة", noPdf:"لا يوجد PDF", noImg:"لا توجد صورة",
-        savedSubjects:"تم حفظ جميع المواد الـ 6 بنجاح!", savedHonor:"تم حفظ أوائل المرحلة الـ 3!", savedMeta:"تم حفظ بيانات المشرف!",
-        gpaTitle:"حاسبة معدل المواد الـ 6 (Average / GPA)", gpaDesc:"أدخل درجاتك للمواد الـ 6 (من 100):", calcGpaBtn:"حساب المعدل",
-        gpaDefault:"المعدل: —", gpaNoGrades:"لم يتم إدخال أي درجة.", gpaAvgText:(a,c)=>`المعدل: ${a}% (${c}/6 مواد)`,
-        countdownTitle:"عدّاد موعد الامتحان (Exam Countdown)", countdownDesc:"اختر تاريخ الامتحان:", calcCountdownBtn:"فحص الأيام المتبقية",
+        savedSubjects:"تم حفظ جميع الـ 12 مادة بنجاح!", savedHonor:"تم حفظ أوائل المرحلة الـ 3!",
+        gpaTitle:"حاسبة معدل الـ 12 مادة", gpaDesc:"أدخل درجاتك لهذه المرحلة (من 100):", calcGpaBtn:"حساب المعدل",
+        gpaDefault:"المعدل: —", gpaNoGrades:"لم يتم إدخال أي درجة.", gpaAvgText:(a,c)=>`المعدل: ${a}% (${c}/12 مادة)`,
+        statsToolTitle:"حاسبة إحصائية سريعة (Mean / Variance / SD)", statsToolDesc:"أدخل الأرقام مفصولة بفاصلة أو مسافة:", calcStatsBtn:"حساب الإحصاء",
+        statsEmpty:"يرجى إدخال أرقام.", statsResult:(m,v,sd,n)=>`Mean: ${m} | Variance: ${v} | SD: ${sd} (n=${n})`,
+        countdownTitle:"عدّاد موعد الامتحان", countdownDesc:"اختر تاريخ الامتحان:", calcCountdownBtn:"فحص الأيام المتبقية",
         countdownDefault:"لم يتم اختيار تاريخ بعد.", countdownPickDate:"يرجى اختيار تاريخ.", countdownDaysLeft:(d)=>`متبقي ${d} يوم على الامتحان.`, countdownToday:"اليوم موعد الامتحان!", countdownPassed:"هذا التاريخ قد مضى.",
-        scheduleTitle:"الجدول الأسبوعي للمحاضرات", scheduleDesc:"اكتب جدولك الأسبوعي:", schedulePh:"الأحد: ...\nالإثنين: ...", saveScheduleBtn:"حفظ الجدول", scheduleSaved:"تم حفظ الجدول.",
-        notesTitle:"ملاحظاتي الخاصة (My Notes)", notesDesc:"اكتب ملاحظاتك هنا:", notesPh:"اكتب ملاحظاتك هنا...", saveNotesBtn:"حفظ الملاحظات", notesSaved:"تم حفظ ملاحظاتك.",
-        themeSettingTitle:"ألوان ومظهر الشاشة (Theme)", themeSettingDesc:"اختر المظهر المناسب:", themeDark:"أزرق ليلي (Midnight Blue)", themeLight:"فاتح نقي (Clean Light)", themeGold:"ذهبي داكن (Royal Gold)",
-        fontSettingTitle:"حجم الخط (Font Size)", fontSettingDesc:"اضبط حجم الخط:", fontSmall:"صغير (Small)", fontNormal:"عادي (Normal)", fontLarge:"كبير (Large)"
+        examSchedTitle:"جدول الامتحانات (Exam Schedule)", examSchedDesc:"اكتب مواعيد وقاعات الامتحانات:", saveExamSchedBtn:"حفظ جدول الامتحانات",
+        scheduleTitle:"الجدول الأسبوعي", scheduleDesc:"اكتب جدولك الأسبوعي:", saveScheduleBtn:"حفظ الجدول", scheduleSaved:"تم الحفظ.",
+        notesTitle:"ملاحظاتي الخاصة (My Notes)", notesDesc:"اكتب ملاحظاتك هنا:", saveNotesBtn:"حفظ الملاحظات",
+        profileJoinTitle:"👤 My Profile — دخول الطالب (Student Join)", profileJoinDesc:"أدخل بياناتك للدخول إلى ملفك الشخصي كطالب:",
+        profNamePh:"الاسم الكامل", profIdPh:"الرقم الجامعي أو البريد", joinBtn:"Join (دخول الطالب)", logoutProfBtn:"Logout (خروج)",
+        profileCardTitle:"بيانات ملف الطالب", profileEmpty:"لم يسجل أي طالب دخوله بعد.", enterNameFirst:"يرجى إدخال الاسم.",
+        themeSettingTitle:"ألوان ومظهر الشاشة", themeSettingDesc:"اختر المظهر المناسب:", themeDark:"Midnight Blue", themeLight:"Clean Light", themeGold:"Royal Gold & Dark",
+        fontSettingTitle:"حجم الخط", fontSettingDesc:"اضبط حجم الخط:", fontSmall:"صغير (Small)", fontNormal:"عادي (Normal)", fontLarge:"كبير (Large)"
       },
       en: {
         dir:"ltr", title:"MyCollege", student:"Student", deptAdmin:"Department Admin", superAdmin:"Super Admin",
         pinPlaceholder:"PIN", unlock:"Unlock", logout:"Logout", statusPrefix:"Active Role:",
-        tabSubjects:"6 Subjects & Top 3 Honor Roll", tabTools:"College Tools", tabSettings:"Settings (⚙️)",
-        adminTitle:"Enhanced Admin Control Center (Super Admin & Dept Admin)", adminDesc:"Full control over 6 subjects, Top 3 honor students, supervisor info, and announcements.",
-        statSubLabel:"Active Subjects", statAnnLabel:"Published Notices", statDeptLabel:"Departments & Notes", statHonorLabel:"Honor Students",
-        metaTitle:"Supervisor & Stage Info", supervisorPh:"Supervisor or coordinator name", stagePh:"Stage or department label", saveMeta:"Save Supervisor Info",
+        tabSubjects:"Departments & Stages (12 Subjects)", tabTools:"College Tools", tabProfile:"My Profile (👤)", tabSettings:"Settings (⚙️)",
+        adminTitle:"Enhanced Admin Control Center", adminDesc:"Full control over 12 subjects per stage, 2 courses, Top 3 honor students, and announcements.",
+        statSubLabel:"Stage Subjects", statAnnLabel:"Published Notices", statDeptLabel:"Departments & Notes", statHonorLabel:"Honor Students",
+        selectDeptTitle:"College Departments", statDeptName:"Statistics", statDeptDesc:"4 Stages • 2 Courses • 12 Subjects per stage",
+        selectStageTitle:"Select Stage", stageNames:{ 1:"Stage 1", 2:"Stage 2", 3:"Stage 3", 4:"Stage 4" },
+        courseAll:"All Subjects (12)", course1:"Course 1 (Mid-Year)", course2:"Course 2 (Final)",
+        searchPh:"Search subjects...", noMatch:"No matching subject found.",
         honorAdminTitle:"Honor Students Support (Top 3 of Stage)", honorAdminDesc:"Enter top 3 students, score/note, and supportive message:", saveHonor:"Save Top 3 Honor Roll",
         honorPublicTitle:"🌟 Top 3 Stage Achievers & Student Support", honorPublicSub:"Recognition and encouragement for high-performing students.",
         rankPrefix:"Rank", studentNamePh:"Top student name", scorePh:"GPA / Score / Note", supportMsgPh:"Supportive message...", noHonorEntry:"No student recorded yet.",
-        sixSubjectsAdminTitle:"6 Subjects Manager (PDF & Images)", saveAllSubjects:"Save All 6 Subjects",
+        twelveSubjectsAdminTitle:"12 Subjects Manager for Selected Stage (PDF & Images)", saveAllSubjects:"Save All 12 Subjects",
         addDept:"Add Department or Note", deptNamePh:"Department or note name", deptCodePh:"Stage or Code", save:"Save",
         addAnn:"Publish Announcement", annTitlePh:"Announcement title", annBodyPh:"Write announcement details...", publish:"Publish",
-        sixSubjectsTitle:"6 Department Subjects (PDF & Images)", sixSubjectsSub:"Each subject has dedicated PDF and image links.",
         deptList:"Registered Departments & Info", annList:"College Announcements", delete:"Delete", wrongPin:"Invalid PIN!", fillFields:"Please fill in the required fields.", empty:"No records found yet.",
         subjectPrefix:"Subject", subjectNamePh:"Subject name", pdfLinkPh:"PDF link", imgLinkPh:"Image link", openPdf:"Open PDF", openImg:"View Image", noPdf:"No PDF", noImg:"No image",
-        savedSubjects:"All 6 subjects saved successfully!", savedHonor:"Top 3 honor roll saved!", savedMeta:"Supervisor info saved!",
-        gpaTitle:"6-Subject Average / GPA Calculator", gpaDesc:"Enter your grades for the 6 subjects (out of 100):", calcGpaBtn:"Calculate Average",
-        gpaDefault:"Average: —", gpaNoGrades:"No grades entered yet.", gpaAvgText:(a,c)=>`Average: ${a}% (${c}/6 subjects)`,
+        savedSubjects:"All 12 subjects saved successfully!", savedHonor:"Top 3 honor roll saved!",
+        gpaTitle:"12-Subject Average / GPA Calculator", gpaDesc:"Enter your grades for this stage (out of 100):", calcGpaBtn:"Calculate Average",
+        gpaDefault:"Average: —", gpaNoGrades:"No grades entered yet.", gpaAvgText:(a,c)=>`Average: ${a}% (${c}/12 subjects)`,
+        statsToolTitle:"Quick Statistics Tool (Mean / Variance / SD)", statsToolDesc:"Enter numbers separated by commas or spaces:", calcStatsBtn:"Calculate Stats",
+        statsEmpty:"Please enter numbers.", statsResult:(m,v,sd,n)=>`Mean: ${m} | Variance: ${v} | SD: ${sd} (n=${n})`,
         countdownTitle:"Exam Countdown Timer", countdownDesc:"Select your exam date:", calcCountdownBtn:"Check Remaining Days",
         countdownDefault:"No date selected yet.", countdownPickDate:"Please select a date.", countdownDaysLeft:(d)=>`${d} days remaining until the exam.`, countdownToday:"The exam is today!", countdownPassed:"This date has passed.",
-        scheduleTitle:"Weekly Class Schedule", scheduleDesc:"Write your weekly schedule:", schedulePh:"Sunday: ...\nMonday: ...", saveScheduleBtn:"Save Schedule", scheduleSaved:"Schedule saved.",
-        notesTitle:"My Personal Notes", notesDesc:"Write your study notes here:", notesPh:"Write your notes here...", saveNotesBtn:"Save Notes", notesSaved:"Your notes have been saved.",
+        examSchedTitle:"Exam Schedule", examSchedDesc:"Write exam dates, times, and rooms:", saveExamSchedBtn:"Save Exam Schedule",
+        scheduleTitle:"Weekly Class Schedule", scheduleDesc:"Write your weekly schedule:", saveScheduleBtn:"Save Schedule", scheduleSaved:"Saved.",
+        notesTitle:"My Personal Notes", notesDesc:"Write your study notes here:", saveNotesBtn:"Save Notes",
+        profileJoinTitle:"👤 My Profile — Student Join", profileJoinDesc:"Enter your student details to join your profile:",
+        profNamePh:"Full Name", profIdPh:"Student ID or Email", joinBtn:"Join (Student Login)", logoutProfBtn:"Logout",
+        profileCardTitle:"Student Profile Card", profileEmpty:"No student joined yet.", enterNameFirst:"Please enter your name.",
         themeSettingTitle:"Theme & Colors", themeSettingDesc:"Choose a visual theme:", themeDark:"Midnight Blue", themeLight:"Clean Light", themeGold:"Royal Gold & Dark",
         fontSettingTitle:"Font Size", fontSettingDesc:"Adjust text size:", fontSmall:"Small", fontNormal:"Normal", fontLarge:"Large"
       }
     };
 
     let currentLang = "ku", currentRole = "student", isAdminUnlocked = false;
-    let subjectsData = Array.from({ length: 6 }, (_, i) => ({ index: i + 1, name: "", pdfUrl: "", imageUrl: "" }));
+    let activeDept = "statistics", activeStage = 1, activeCourse = "all", searchQuery = "";
+    let stageSubjectsMap = JSON.parse(JSON.stringify(DEFAULT_STAGE_SUBJECTS));
     let honorData = [{ rank: 1, name: "", score: "", message: "" }, { rank: 2, name: "", score: "", message: "" }, { rank: 3, name: "", score: "", message: "" }];
-    let metaInfo = { supervisor: "", stage: "" };
+    let studentProfile = null;
     let cachedDepts = [], cachedAnns = [];
 
     const langSelect = document.getElementById("langSelect");
@@ -331,6 +482,10 @@
       return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     }
 
+    function getStageList() {
+      return stageSubjectsMap[activeStage] || DEFAULT_STAGE_SUBJECTS[activeStage];
+    }
+
     function applyLanguage() {
       const t = i18n[currentLang];
       document.documentElement.lang = currentLang;
@@ -338,18 +493,24 @@
       const mapText = {
         appTitle: t.title, optStudent: t.student, optDeptAdmin: t.deptAdmin, optSuperAdmin: t.superAdmin,
         unlockBtn: t.unlock, logoutBtn: t.logout, tabSubjectsBtn: t.tabSubjects, tabToolsBtn: t.tabTools,
-        tabSettingsBtn: t.tabSettings, adminPanelTitle: t.adminTitle, adminPanelDesc: t.adminDesc,
+        tabProfileBtn: t.tabProfile, tabSettingsBtn: t.tabSettings, adminPanelTitle: t.adminTitle, adminPanelDesc: t.adminDesc,
         statSubLabel: t.statSubLabel, statAnnLabel: t.statAnnLabel, statDeptLabel: t.statDeptLabel,
-        statHonorLabel: t.statHonorLabel, metaInfoTitle: t.metaTitle, saveMetaBtn: t.saveMeta,
+        statHonorLabel: t.statHonorLabel, selectDeptTitle: t.selectDeptTitle, statDeptName: t.statDeptName,
+        statDeptDesc: t.statDeptDesc, selectStageTitle: t.selectStageTitle,
+        stageBtn1: t.stageNames[1], stageBtn2: t.stageNames[2], stageBtn3: t.stageNames[3], stageBtn4: t.stageNames[4],
+        courseAllBtn: t.courseAll, course1Btn: t.course1, course2Btn: t.course2,
         honorAdminTitle: t.honorAdminTitle, honorAdminDesc: t.honorAdminDesc, saveHonorBtn: t.saveHonor,
         honorPublicTitle: t.honorPublicTitle, honorPublicSub: t.honorPublicSub,
-        sixSubjectsAdminTitle: t.sixSubjectsAdminTitle, saveAllSubjectsBtn: t.saveAllSubjects,
+        twelveSubjectsAdminTitle: t.twelveSubjectsAdminTitle, saveAllSubjectsBtn: t.saveAllSubjects,
         addDeptTitle: t.addDept, saveDeptBtn: t.save, addAnnTitle: t.addAnn, saveAnnBtn: t.publish,
-        sixSubjectsTitle: t.sixSubjectsTitle, sixSubjectsSub: t.sixSubjectsSub, deptListTitle: t.deptList,
-        annListTitle: t.annList, gpaTitle: t.gpaTitle, gpaDesc: t.gpaDesc, calcGpaBtn: t.calcGpaBtn,
+        deptListTitle: t.deptList, annListTitle: t.annList, gpaTitle: t.gpaTitle, gpaDesc: t.gpaDesc, calcGpaBtn: t.calcGpaBtn,
+        statsToolTitle: t.statsToolTitle, statsToolDesc: t.statsToolDesc, calcStatsBtn: t.calcStatsBtn,
         countdownTitle: t.countdownTitle, countdownDesc: t.countdownDesc, calcCountdownBtn: t.calcCountdownBtn,
+        examSchedTitle: t.examSchedTitle, examSchedDesc: t.examSchedDesc, saveExamSchedBtn: t.saveExamSchedBtn,
         scheduleTitle: t.scheduleTitle, scheduleDesc: t.scheduleDesc, saveScheduleBtn: t.saveScheduleBtn,
         notesTitle: t.notesTitle, notesDesc: t.notesDesc, saveNotesBtn: t.saveNotesBtn,
+        profileJoinTitle: t.profileJoinTitle, profileJoinDesc: t.profileJoinDesc,
+        studentJoinBtn: t.joinBtn, studentLogoutBtn: t.logoutProfBtn, profileCardTitle: t.profileCardTitle,
         themeSettingTitle: t.themeSettingTitle, themeSettingDesc: t.themeSettingDesc,
         btnThemeDark: t.themeDark, btnThemeLight: t.themeLight, btnThemeGold: t.themeGold,
         fontSettingTitle: t.fontSettingTitle, fontSettingDesc: t.fontSettingDesc,
@@ -357,20 +518,23 @@
       };
       Object.entries(mapText).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.textContent = val; });
 
+      document.getElementById("profStageSelect").innerHTML = [1,2,3,4].map(n=>`<option value="${n}">${t.stageNames[n]}</option>`).join("");
+      if (studentProfile) document.getElementById("profStageSelect").value = String(studentProfile.stage || 1);
+
       pinInput.placeholder = t.pinPlaceholder;
-      document.getElementById("supervisorNameInput").placeholder = t.supervisorPh;
-      document.getElementById("stageLabelInput").placeholder = t.stagePh;
+      document.getElementById("subjectSearchInput").placeholder = t.searchPh;
       document.getElementById("deptName").placeholder = t.deptNamePh;
       document.getElementById("deptCode").placeholder = t.deptCodePh;
       document.getElementById("annTitle").placeholder = t.annTitlePh;
       document.getElementById("annBody").placeholder = t.annBodyPh;
-      document.getElementById("scheduleText").placeholder = t.schedulePh;
-      document.getElementById("personalNotesText").placeholder = t.notesPh;
+      document.getElementById("profNameInput").placeholder = t.profNamePh;
+      document.getElementById("profIdInput").placeholder = t.profIdPh;
 
       if (!document.getElementById("gpaOutput").dataset.calculated) document.getElementById("gpaOutput").textContent = t.gpaDefault;
       if (!document.getElementById("countdownOutput").dataset.calculated) document.getElementById("countdownOutput").textContent = t.countdownDefault;
 
-      updateHeaderMeta();
+      renderProfileUI();
+      updateStageHeading();
       updateRoleUI();
       renderHonorDisplay();
       renderAdminHonorForm();
@@ -382,10 +546,90 @@
       updateAdminStats();
     }
 
-    function updateHeaderMeta() {
-      const parts = [metaInfo.stage, metaInfo.supervisor].filter((x) => x && x.trim());
-      document.getElementById("headerMetaInfo").textContent = parts.length ? parts.join(" • ") : "Live Firestore Sync";
+    function renderProfileUI() {
+      const t = i18n[currentLang];
+      const badge = document.getElementById("studentHeaderBadge");
+      const card = document.getElementById("studentProfileCard");
+      const logoutProfBtn = document.getElementById("studentLogoutBtn");
+      if (studentProfile && studentProfile.name) {
+        const stName = t.stageNames[studentProfile.stage] || `Stage ${studentProfile.stage}`;
+        badge.textContent = `👤 ${studentProfile.name} (${stName})`;
+        logoutProfBtn.classList.remove("hidden");
+        card.innerHTML = `
+          <div><strong>${escapeHtml(studentProfile.name)}</strong></div>
+          <div class="badge">${escapeHtml(t.statDeptName)} • ${escapeHtml(stName)}</div>
+          ${studentProfile.studentId ? `<div class="muted">${escapeHtml(studentProfile.studentId)}</div>` : ""}
+        `;
+      } else {
+        badge.textContent = "👤 Guest";
+        logoutProfBtn.classList.add("hidden");
+        card.innerHTML = `<span class="muted">${t.profileEmpty}</span>`;
+      }
     }
+
+    document.getElementById("studentJoinBtn").addEventListener("click", () => {
+      const t = i18n[currentLang];
+      const name = document.getElementById("profNameInput").value.trim();
+      const stage = Number(document.getElementById("profStageSelect").value) || 1;
+      const studentId = document.getElementById("profIdInput").value.trim();
+      if (!name) return alert(t.enterNameFirst);
+      studentProfile = { name, stage, studentId };
+      localStorage.setItem("mycollege_student_profile", JSON.stringify(studentProfile));
+      activeStage = stage;
+      document.querySelectorAll(".stage-btn").forEach(b => b.classList.toggle("active", Number(b.dataset.stage) === stage));
+      renderProfileUI();
+      updateStageHeading();
+      renderAdminSubjectsForm();
+      renderSubjectsDisplay();
+      renderGpaInputs();
+      updateAdminStats();
+    });
+
+    document.getElementById("studentLogoutBtn").addEventListener("click", () => {
+      studentProfile = null;
+      localStorage.removeItem("mycollege_student_profile");
+      document.getElementById("profNameInput").value = "";
+      document.getElementById("profIdInput").value = "";
+      renderProfileUI();
+    });
+
+    function selectDepartment(dept) {
+      activeDept = dept;
+      document.getElementById("deptStatBtn").classList.toggle("active", dept === "statistics");
+      updateStageHeading();
+      renderSubjectsDisplay();
+    }
+
+    function updateStageHeading() {
+      const t = i18n[currentLang];
+      const stageLabel = t.stageNames[activeStage] || `Stage ${activeStage}`;
+      document.getElementById("activeStageHeading").textContent = `${t.statDeptName} — ${stageLabel}`;
+      const names = getStageList().map((s, i) => `${i + 1}. ${s.name && s.name.trim() ? s.name.trim() : `${t.subjectPrefix} ${i + 1}`}`);
+      document.getElementById("activeStageSubjectsList").textContent = names.join("  •  ");
+    }
+
+    document.querySelectorAll(".stage-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeStage = Number(btn.dataset.stage);
+        document.querySelectorAll(".stage-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        updateStageHeading(); renderAdminSubjectsForm(); renderSubjectsDisplay(); renderGpaInputs(); updateAdminStats();
+      });
+    });
+
+    document.querySelectorAll(".course-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeCourse = btn.dataset.course;
+        document.querySelectorAll(".course-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderSubjectsDisplay();
+      });
+    });
+
+    document.getElementById("subjectSearchInput").addEventListener("input", (e) => {
+      searchQuery = e.target.value.trim().toLowerCase();
+      renderSubjectsDisplay();
+    });
 
     function updateRoleUI() {
       const t = i18n[currentLang];
@@ -437,25 +681,6 @@
       localStorage.setItem("mycollege_font_scale", String(scale));
     }
 
-    document.getElementById("saveMetaBtn").addEventListener("click", async () => {
-      if (!isAdminUnlocked) return;
-      metaInfo = { supervisor: document.getElementById("supervisorNameInput").value.trim(), stage: document.getElementById("stageLabelInput").value.trim() };
-      updateHeaderMeta();
-      localStorage.setItem("mycollege_meta_info", JSON.stringify(metaInfo));
-      try { await db.collection("college_config").doc("meta_info").set({ ...metaInfo, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); } catch (e) { console.error(e); }
-      alert(i18n[currentLang].savedMeta);
-    });
-
-    db.collection("college_config").doc("meta_info").onSnapshot((doc) => {
-      if (doc.exists) {
-        metaInfo = { supervisor: doc.data().supervisor || "", stage: doc.data().stage || "" };
-        localStorage.setItem("mycollege_meta_info", JSON.stringify(metaInfo));
-        document.getElementById("supervisorNameInput").value = metaInfo.supervisor;
-        document.getElementById("stageLabelInput").value = metaInfo.stage;
-        updateHeaderMeta();
-      }
-    });
-
     function renderAdminHonorForm() {
       const t = i18n[currentLang], medals = ["🥇", "🥈", "🥉"];
       document.getElementById("adminHonorGrid").innerHTML = honorData.map((h, i) => `
@@ -488,7 +713,7 @@
       }));
       renderHonorDisplay(); updateAdminStats();
       localStorage.setItem("mycollege_honor_cache", JSON.stringify(honorData));
-      try { await db.collection("college_config").doc("honor_roll").set({ topThree: honorData, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); } catch (e) { console.error(e); }
+      try { await db.collection("college_config").doc("honor_roll").set({ topThree: honorData, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); } catch (e) {}
       alert(i18n[currentLang].savedHonor);
     });
 
@@ -501,10 +726,14 @@
     });
 
     function renderAdminSubjectsForm() {
-      const t = i18n[currentLang];
-      document.getElementById("adminSubjectsGrid").innerHTML = subjectsData.map((s, i) => `
+      const t = i18n[currentLang], list = getStageList();
+      document.getElementById("adminSubjectsGrid").innerHTML = list.map((s, i) => `
         <div class="admin-subject-box">
           <strong>${t.subjectPrefix} ${i + 1}</strong>
+          <select id="subjCourse_${i}">
+            <option value="c1" ${(s.course || (i < 6 ? "c1" : "c2")) === "c1" ? "selected" : ""}>${t.course1}</option>
+            <option value="c2" ${(s.course || (i < 6 ? "c1" : "c2")) === "c2" ? "selected" : ""}>${t.course2}</option>
+          </select>
           <input type="text" id="subjName_${i}" value="${escapeHtml(s.name || "")}" placeholder="${t.subjectNamePh}" />
           <input type="url" id="subjPdf_${i}" value="${escapeHtml(s.pdfUrl || "")}" placeholder="${t.pdfLinkPh}" />
           <input type="url" id="subjImg_${i}" value="${escapeHtml(s.imageUrl || "")}" placeholder="${t.imgLinkPh}" />
@@ -512,12 +741,26 @@
     }
 
     function renderSubjectsDisplay() {
-      const t = i18n[currentLang];
-      document.getElementById("subjectsDisplayGrid").innerHTML = subjectsData.map((s, i) => {
-        const name = s.name && s.name.trim() ? s.name.trim() : `${t.subjectPrefix} ${i + 1}`;
+      const t = i18n[currentLang], list = getStageList();
+      const filtered = list.filter((s, i) => {
+        const c = s.course || (i < 6 ? "c1" : "c2");
+        const courseOk = activeCourse === "all" || activeCourse === c;
+        const name = (s.name && s.name.trim() ? s.name.trim() : `${t.subjectPrefix} ${s.index || i + 1}`).toLowerCase();
+        const searchOk = !searchQuery || name.includes(searchQuery) || String(s.index || i + 1).includes(searchQuery);
+        return courseOk && searchOk;
+      });
+      if (!filtered.length) {
+        document.getElementById("subjectsDisplayGrid").innerHTML = `<p class="muted">${t.noMatch}</p>`;
+        return;
+      }
+      document.getElementById("subjectsDisplayGrid").innerHTML = filtered.map((s) => {
+        const idx = (s.index || 1) - 1;
+        const c = s.course || (idx < 6 ? "c1" : "c2");
+        const cLabel = c === "c1" ? t.course1 : t.course2;
+        const name = s.name && s.name.trim() ? s.name.trim() : `${t.subjectPrefix} ${s.index || idx + 1}`;
         return `
           <div class="subject-card">
-            <div class="subject-header"><h4>${escapeHtml(name)}</h4><span class="subject-num">#${i + 1}</span></div>
+            <div class="subject-header"><h4>${escapeHtml(name)}</h4><span class="subject-num">#${s.index || idx + 1} • ${escapeHtml(cLabel)}</span></div>
             <div class="links-group">
               ${s.pdfUrl && s.pdfUrl.trim() ? `<a class="link-pill pdf" href="${escapeHtml(s.pdfUrl.trim())}" target="_blank" rel="noopener noreferrer">📄 ${t.openPdf}</a>` : `<span class="muted">📄 ${t.noPdf}</span>`}
               ${s.imageUrl && s.imageUrl.trim() ? `<a class="link-pill img" href="${escapeHtml(s.imageUrl.trim())}" target="_blank" rel="noopener noreferrer">🖼️ ${t.openImg}</a>` : `<span class="muted">🖼️ ${t.noImg}</span>`}
@@ -528,29 +771,40 @@
 
     document.getElementById("saveAllSubjectsBtn").addEventListener("click", async () => {
       if (!isAdminUnlocked) return;
-      subjectsData = subjectsData.map((_, i) => ({
+      const updated = Array.from({ length: 12 }, (_, i) => ({
         index: i + 1,
+        course: document.getElementById(`subjCourse_${i}`).value,
         name: document.getElementById(`subjName_${i}`).value.trim(),
         pdfUrl: document.getElementById(`subjPdf_${i}`).value.trim(),
         imageUrl: document.getElementById(`subjImg_${i}`).value.trim()
       }));
-      renderSubjectsDisplay(); renderGpaInputs(); updateAdminStats();
-      localStorage.setItem("mycollege_six_subjects_cache", JSON.stringify(subjectsData));
-      try { await db.collection("college_config").doc("six_subjects").set({ subjects: subjectsData, updatedBy: currentRole, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); } catch (e) { console.error(e); }
+      stageSubjectsMap[activeStage] = updated;
+      updateStageHeading(); renderSubjectsDisplay(); renderGpaInputs(); updateAdminStats();
+      localStorage.setItem("mycollege_stages_subjects", JSON.stringify(stageSubjectsMap));
+      try {
+        await db.collection("college_config").doc(`stage_${activeStage}_subjects`).set({
+          stage: activeStage, subjects: updated, updatedBy: currentRole, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (e) {}
       alert(i18n[currentLang].savedSubjects);
     });
 
-    db.collection("college_config").doc("six_subjects").onSnapshot((doc) => {
-      if (doc.exists && Array.isArray(doc.data().subjects) && doc.data().subjects.length === 6) {
-        subjectsData = doc.data().subjects;
-        localStorage.setItem("mycollege_six_subjects_cache", JSON.stringify(subjectsData));
-        renderSubjectsDisplay(); renderGpaInputs(); updateAdminStats(); if (isAdminUnlocked) renderAdminSubjectsForm();
-      }
+    [1, 2, 3, 4].forEach((st) => {
+      db.collection("college_config").doc(`stage_${st}_subjects`).onSnapshot((doc) => {
+        if (doc.exists && Array.isArray(doc.data().subjects) && doc.data().subjects.length === 12) {
+          stageSubjectsMap[st] = doc.data().subjects;
+          localStorage.setItem("mycollege_stages_subjects", JSON.stringify(stageSubjectsMap));
+          if (activeStage === st) {
+            updateStageHeading(); renderSubjectsDisplay(); renderGpaInputs(); updateAdminStats();
+            if (isAdminUnlocked) renderAdminSubjectsForm();
+          }
+        }
+      });
     });
 
     function renderGpaInputs() {
-      const t = i18n[currentLang];
-      document.getElementById("gpaInputsGrid").innerHTML = subjectsData.map((s, i) => {
+      const t = i18n[currentLang], list = getStageList();
+      document.getElementById("gpaInputsGrid").innerHTML = list.map((s, i) => {
         const label = s.name && s.name.trim() ? s.name.trim() : `${t.subjectPrefix} ${i + 1}`;
         return `<input type="number" min="0" max="100" step="0.5" id="grade_${i}" placeholder="${escapeHtml(label)}" />`;
       }).join("");
@@ -558,13 +812,25 @@
 
     document.getElementById("calcGpaBtn").addEventListener("click", () => {
       const t = i18n[currentLang], vals = [];
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 12; i++) {
         const raw = document.getElementById(`grade_${i}`).value;
         if (raw !== "" && !Number.isNaN(Number(raw))) vals.push(Number(raw));
       }
       const out = document.getElementById("gpaOutput");
       out.dataset.calculated = "1";
       out.textContent = vals.length ? t.gpaAvgText((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2), vals.length) : t.gpaNoGrades;
+    });
+
+    document.getElementById("calcStatsBtn").addEventListener("click", () => {
+      const t = i18n[currentLang];
+      const nums = document.getElementById("statsNumbersInput").value.split(/[\s,]+/).map(Number).filter(n => !Number.isNaN(n));
+      const out = document.getElementById("statsOutput");
+      if (!nums.length) { out.textContent = t.statsEmpty; return; }
+      const n = nums.length;
+      const mean = nums.reduce((a, b) => a + b, 0) / n;
+      const variance = nums.reduce((acc, x) => acc + Math.pow(x - mean, 2), 0) / (n > 1 ? n - 1 : 1);
+      const sd = Math.sqrt(variance);
+      out.textContent = t.statsResult(mean.toFixed(2), variance.toFixed(2), sd.toFixed(2), n);
     });
 
     document.getElementById("calcCountdownBtn").addEventListener("click", () => {
@@ -576,13 +842,14 @@
       out.textContent = diff > 0 ? t.countdownDaysLeft(diff) : diff === 0 ? t.countdownToday : t.countdownPassed;
     });
 
+    document.getElementById("saveExamSchedBtn").addEventListener("click", () => { localStorage.setItem("mycollege_exam_schedule", document.getElementById("examScheduleText").value); alert(i18n[currentLang].scheduleSaved); });
     document.getElementById("saveScheduleBtn").addEventListener("click", () => { localStorage.setItem("mycollege_schedule", document.getElementById("scheduleText").value); alert(i18n[currentLang].scheduleSaved); });
-    document.getElementById("saveNotesBtn").addEventListener("click", () => { localStorage.setItem("mycollege_notes", document.getElementById("personalNotesText").value); alert(i18n[currentLang].notesSaved); });
+    document.getElementById("saveNotesBtn").addEventListener("click", () => { localStorage.setItem("mycollege_notes", document.getElementById("personalNotesText").value); alert(i18n[currentLang].scheduleSaved); });
 
     function updateAdminStats() {
-      const activeSubj = subjectsData.filter((s) => (s.name && s.name.trim()) || (s.pdfUrl && s.pdfUrl.trim()) || (s.imageUrl && s.imageUrl.trim())).length;
+      const activeSubj = getStageList().filter((s) => (s.name && s.name.trim()) || (s.pdfUrl && s.pdfUrl.trim()) || (s.imageUrl && s.imageUrl.trim())).length;
       const activeHonor = honorData.filter((h) => h.name && h.name.trim()).length;
-      document.getElementById("statActiveSubjects").textContent = `${activeSubj} / 6`;
+      document.getElementById("statActiveSubjects").textContent = `${activeSubj} / 12`;
       document.getElementById("statAnnCount").textContent = String(cachedAnns.length);
       document.getElementById("statDeptCount").textContent = String(cachedDepts.length);
       document.getElementById("statHonorCount").textContent = `${activeHonor} / 3`;
@@ -622,11 +889,12 @@
     const sLang = localStorage.getItem("mycollege_lang"); if (sLang && i18n[sLang]) { currentLang = sLang; langSelect.value = sLang; }
     const sTheme = localStorage.getItem("mycollege_theme"); if (sTheme) setTheme(sTheme);
     const sScale = localStorage.getItem("mycollege_font_scale"); if (sScale) setFontScale(sScale);
+    const sExamSched = localStorage.getItem("mycollege_exam_schedule"); if (sExamSched) document.getElementById("examScheduleText").value = sExamSched;
     const sSched = localStorage.getItem("mycollege_schedule"); if (sSched) document.getElementById("scheduleText").value = sSched;
     const sNotes = localStorage.getItem("mycollege_notes"); if (sNotes) document.getElementById("personalNotesText").value = sNotes;
-    try { const m = JSON.parse(localStorage.getItem("mycollege_meta_info")); if (m) { metaInfo = { supervisor: m.supervisor || "", stage: m.stage || "" }; document.getElementById("supervisorNameInput").value = metaInfo.supervisor; document.getElementById("stageLabelInput").value = metaInfo.stage; } } catch (e) {}
+    try { const p = JSON.parse(localStorage.getItem("mycollege_student_profile")); if (p && p.name) { studentProfile = p; activeStage = Number(p.stage) || 1; document.getElementById("profNameInput").value = p.name; document.getElementById("profIdInput").value = p.studentId || ""; document.querySelectorAll(".stage-btn").forEach(b => b.classList.toggle("active", Number(b.dataset.stage) === activeStage)); } } catch (e) {}
     try { const h = JSON.parse(localStorage.getItem("mycollege_honor_cache")); if (Array.isArray(h) && h.length === 3) honorData = h; } catch (e) {}
-    try { const s = JSON.parse(localStorage.getItem("mycollege_six_subjects_cache")); if (Array.isArray(s) && s.length === 6) subjectsData = s; } catch (e) {}
+    try { const m = JSON.parse(localStorage.getItem("mycollege_stages_subjects")); if (m && typeof m === "object") stageSubjectsMap = { ...stageSubjectsMap, ...m }; } catch (e) {}
 
     const manifestBlob = new Blob([JSON.stringify({ name: "MyCollege", short_name: "MyCollege", start_url: ".", display: "standalone", background_color: "#0b1120", theme_color: "#0f172a" })], { type: "application/json" });
     const manifestLink = document.createElement("link"); manifestLink.rel = "manifest"; manifestLink.href = URL.createObjectURL(manifestBlob); document.head.appendChild(manifestLink);
